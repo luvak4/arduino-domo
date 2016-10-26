@@ -1,15 +1,21 @@
 ////////////////////////////////
-// TASTIERA
+// MASTER (ex 'tastiera')
 ////////////////////////////////
+
+// E' l'unità radio che fa domande alle pertiferiche
+// attende le risposte, le ripete per i
+// dispositivi nelle vicinanze e accetta 
+// domande (che ripeterà) da dispositivi nelle vicinanze
+
 /*
-  	           	+-----------+
-  	          	|           |
+  	       	+-----------+
+  	       	|           |
                 |           |         
          IR --->| 2         |
                 |           |
    radio rx --->| 11     12 |---> radio tx
-  	          	|           |
-  		          +-----------+
+          	|           |
+                +-----------+
                    ARDUINO
                   ATMEGA 328
 */
