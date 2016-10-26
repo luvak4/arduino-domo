@@ -1,3 +1,12 @@
+/////////////////////////////
+// timer per ventilatore a pale a soffitto
+///////////////////////////
+
+// Attraverso un pulsante "a peretta" è possibile impostare il tempo
+// di accensione di un ventilatore (per due/quattro/sei/otto ore). Il tempo
+// impostato e lo stato di avanzamento del tempo
+// è visualizzato da 4 led
+
 //bool DEBUG =true;
 const int inPulsante = 7;
 const int LED1 = 2;
