@@ -14,7 +14,8 @@
                 |           |
    light    --->| A0      2 |---> rele A
    temperat --->| A1      3 |---> rele B
-                |           |
+  man.releB --->| 5         |
+  man.releA --->| 4         |
    radio rx --->| 11     12 |---> radio tx
                 |           |
                 +-----------+
