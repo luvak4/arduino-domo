@@ -64,12 +64,15 @@ const int pin_ir  =  2; // ir pin
 #define MASTRm 113 // >>> carica EEPROM                (CANTIokB)
 #define MASTRn 114 // >>> carica DEFAULT               (CANTIokC)
 #define MASTRo 115 // get temp/luce STATO/tempo        (CANTId)
-#define MASTRp 116 // rele ON                          (CANTIa)
-#define MASTRq 117 // rele OFF                         (CANTIa)
-#define MASTRr 118 // rele toggle                      (CANTIa)
+#define MASTRp 116 // rele A ON                          (CANTIa)
+#define MASTRq 117 // rele A OFF                         (CANTIa)
+#define MASTRr 118 // rele A toggle                      (CANTIa)
 #define MASTRpp 119 // rele B ON                          (CANTIa)
 #define MASTRqq 120 // rele B OFF                         (CANTIa)
 #define MASTRrr 121 // rele B toggle                      (CANTIa)
+#define MASTCa 150 // leggi tempo led A/B/C
+#define MASTCb 151 // leggi tempo led D
+#define MASTCc 152 // get stato leds
 /*--------------------------------
 ** risposte (IN)
 */
@@ -80,6 +83,9 @@ const int pin_ir  =  2; // ir pin
 #define CANTIokA 1004 // get ok salva eprom
 #define CANTIokB 1005 // get ok carica eprom
 #define CANTIokC 1006 // get ok carica default
+#define CALDAa   1010 // get tempo led A/B/C
+#define CALDAb   1011 // get tempo led D
+#define CALDAc   1012 // get stato leds
 /*--------------------------------
 ** LCM
 */
