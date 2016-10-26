@@ -1,0 +1,64 @@
+\documentclass[DIV=24]{scrartcl}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes}
+\usetikzlibrary{arrows}
+\usepackage{fontspec}
+
+\usepackage{listings}
+\usepackage{graphicx}
+
+\input{ad-timer_ventola01.tex}
+
+\newcommand{\oreProgrammate}{\color{red}{oreProgrammate}}
+\newcommand{\tempoAspegnimento}{\color{blue}{tempoAspegne}}
+\newcommand{\conteggioAttivo}{\color{green!60!black}{conteggioAttivo}}
+
+\date{\today}
+
+\begin{document}
+    \setmainfont{DejaVu Sans Mono}
+    %\maketitle
+    \tableofcontents
+    \begin{abstract}
+    	Modifiche versione 4:
+    	\begin{itemize}
+    		\item correzione errori nella base dei tempi (Pa=Qa-Xa e Pb=Qb-Xb)
+    		\item impostate ore 2,4,6,8
+    		\item spegnimento del led sulla porta 13 dopo un lampeggio iniziale quando si collega il circuito
+    	\end{itemize}
+    	\bigskip
+        Il circuito è un timer programmabile per l'accensione e lo spegnimento automatico della pala del ventilatore. 
+        \begin{itemize}
+        \item Il timer si attiva premendo il pulsante. 
+        \item L'indicazione del tempo programmato è visualizzata da quattro LED luminosi che si accendono progressivamente ad ogni pressione del pulsante.
+        \item Alla quarta attivazione il tempo impostato riparte da zero.        
+        \item Una pressione prolungata del pulsante permette di spegnere il timer se risulta già acceso. Se  spento, la stessa prolungata accensione ne determina l'attivazione di un tempo predefinito pari a tre LED accesi.
+        \end{itemize}
+    \end{abstract}
+    \section{Schemi a blocchi}    
+    \subsection{loop}
+    \begin{center}
+        \input{ad-timer_ventola02.tex}
+    \end{center}
+    \subsection{Orologio}
+    \begin{center}
+        \input{ad-timer_ventola03.tex}
+    \end{center}    
+	\subsection{chkTEMPO}
+    \begin{center}
+        \input{ad-timer_ventola04.tex}
+    \end{center}
+    \subsection{setLEDs}
+    \begin{center}
+        \input{ad-timer_ventola05.tex}
+    \end{center}       
+    \subsection{chkPremuto}
+    \begin{center}
+        \input{ad-timer_ventola06.tex}
+    \end{center}    
+    \subsection{chkRilasciato}
+    \begin{center}
+        \input{ad-timer_ventola07.tex}
+    \end{center}
+\end{document}
