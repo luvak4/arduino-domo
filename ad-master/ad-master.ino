@@ -70,6 +70,10 @@ const int pin_ir  =  2; // ir pin
 #define MASTRpp 119 // rele B ON                          (CANTIa)
 #define MASTRqq 120 // rele B OFF                         (CANTIa)
 #define MASTRrr 121 // rele B toggle                      (CANTIa)
+#define MASTRaa 122 // ogni minuto MASTRa
+#define MASTRab 123 // disable ogni minuto MASTRa
+#define MASTRoo 124 // ogni minuto MASTRo
+#define MASTRop 125 // disable ogni minuto MASTRo
 #define MASTCa 150 // leggi tempo led A/B/C
 #define MASTCb 151 // leggi tempo led D
 #define MASTCc 152 // get stato leds
@@ -167,6 +171,9 @@ unsigned long tempo;
 byte decimi;
 byte secondi;
 byte minuti;
+bool MINUTIenableAA=false;
+bool MINUTIenableOO=false;
+
 /*////////////////////////////////
 * setup
 */
@@ -204,6 +211,12 @@ void loop(){
       secondi++;
       if (secondi>59){
 	//BEGIN ogni minuto
+ if (MINUTIenableAA){
+  
+ }
+ if (MINUTIenableOO){
+  
+ }
 	//END   ogni minuto
 	secondi=0;
 	minuti++;
@@ -435,19 +448,35 @@ void chechForIR(){
     ////////start switch////////////
     switch (key){
     case KEY_OK:
-      ////////////////////////////////
-      // invia il numero composto
-      ////////////////////////////////
-      stampaNc();
-      INTERIlocali[MESSnum]=NUMcomp;
-      INTERIlocali[DATOa]=0;
-      INTERIlocali[DATOb]=0;
-      INTERIlocali[DATOc]=0;
-      encodeMessage();
-      vw_rx_stop();
-      vw_send((uint8_t *)BYTEradio,BYTEStoTX);
-      vw_wait_tx();
-      vw_rx_start();
+      switch (MESSnum){
+        case MASTRaa:
+        MINUTIenableAA=true;
+        break;
+        case MASTRab:
+        MINUTIenableAA=false;
+        break;
+        case MASTRoo:
+        MINUTIenableOO=true;
+        break;
+        case MASTRop:
+        MINUTIenableOO=false;
+        break;
+        default:
+        ////////////////////////////////
+        // invia il numero composto
+        ////////////////////////////////
+        stampaNc();
+        INTERIlocali[MESSnum]=NUMcomp;
+        INTERIlocali[DATOa]=0;
+        INTERIlocali[DATOb]=0;
+        INTERIlocali[DATOc]=0;
+        encodeMessage();
+        vw_rx_stop();
+        vw_send((uint8_t *)BYTEradio,BYTEStoTX);
+        vw_wait_tx();
+        vw_rx_start();
+        break;
+      }
       break;
     case KEY_1: scorriNumero(1);break;
     case KEY_2: scorriNumero(2);break;
