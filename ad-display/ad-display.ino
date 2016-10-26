@@ -110,7 +110,8 @@ int INDIRIZZO=0;
 
  lcd.begin(20, 4);           // LCM initialize 20 cols 4 rows
  lcd.setCursor(0,0);         // LCM first row, first col
- lcd.print("Valk 16 "); // LCM message
+ lcd.print("Valk 2016"); // LCM message
+ /*
  lcd.write(byte(SIMBluce));
  lcd.write(byte(SIMBtermo));
  lcd.write(byte(SIMBlivA));
@@ -123,6 +124,7 @@ int INDIRIZZO=0;
  lcd.write(byte(SIMBgiu));
  lcd.write(byte(SIMBon));
  lcd.write(byte(SIMBoff));
+ */
  //Serial.begin(9600); // debug
  /*
  byte n=240;
