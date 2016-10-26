@@ -51,7 +51,7 @@ const int pin_ir  =  2; // ir pin
 */
 #define MASTRa 101 // get luce/temp/rele               (CANTIa)
 #define MASTRb 102 // !- set temp (soglia) up   +10    (CANTIb)
-#define MASTRc 103 // !- set temp (soglorgia) down -10  (CANTIb)
+#define MASTRc 103 // !- set temp (soglia) down -10    (CANTIb)
 #define MASTRd 104 // !- set luce (soglia a) up +5     (CANTIb)
 #define MASTRe 105 // !- set luce (soglia a) dn -5     (CANTIb)
 #define MASTRf 106 // !- set luce (soglia b) up +50    (CANTIb)
@@ -59,7 +59,7 @@ const int pin_ir  =  2; // ir pin
 #define MASTRh 108 // !---> get soglie                 (CANTIb)
 #define MASTRi 109 // !- set AGC delay up +300         (CANTIc)
 #define MASTRj 110 // !- set AGC delay dn -300         (CANTIc)
-#define MASTRk 111 // !---> AGC delay                  (CANTIc)
+#define MASTRk 111 // !---> get AGC delay              (CANTIc)
 #define MASTRl 112 // >>> salva  EEPROM                (CANTIokA)
 #define MASTRm 113 // >>> carica EEPROM                (CANTIokB)
 #define MASTRn 114 // >>> carica DEFAULT               (CANTIokC)
@@ -516,10 +516,12 @@ void txDISPLAY(byte colonna, byte riga){
 void stampaNc(){
   //char buf[5];
   //sprintf(buf, "%5d",NUMcomp); 
-  //CARATTERI="     ";
+  CARATTERI="     ";
   //txDISPLAY(10,0);//---->
   //delay(300);
+  if (NUMcomp!=0){
   CARATTERI=String(NUMcomp);
+  }
   txDISPLAY(10,0);//---->
 }
 /*--------------------------------
