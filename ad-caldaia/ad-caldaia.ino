@@ -2,6 +2,11 @@
 // CALDAIA
 /////////////////////////
 
+// leggelo stato di 4 LED della caldaia, ne tiene conto dei minuti 
+// in cui sono rimasti accesi singolarmente. Ogni 24 ore vengono
+// resettati i contatori. Le informazioni sullo stato vengono rese
+// disponibili via radio
+
 #include <VirtualWire.h>
 
 #define pin_photoA    A0
