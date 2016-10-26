@@ -2,11 +2,18 @@
 // DIGITAL-ANALOG
 ////////////////////////////////
 
+// Legge il valore di temperatura e luce.
+// Oltre ai valori "RAW" vengono resi disponibili
+// via radio anche lo stato (temperatura in salita/discesa; luce bassa/media/alta)
+// e il tempo di ogni fase (da quanto tempo in salita/discesa, etc.).
+// Via radio è inoltre possibile comandare due relè a distanza e 
+// conoscere lo stato di commutazione di ognuno.
+
 /*
                 +-----------+
                 |           |
-   light    --->| A0      2 |---> rele
-   temperat --->| A1        |
+   light    --->| A0      2 |---> rele A
+   temperat --->| A1      3 |---> rele B
                 |           |
    radio rx --->| 11     12 |---> radio tx
                 |           |
