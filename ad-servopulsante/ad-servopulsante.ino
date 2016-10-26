@@ -33,14 +33,13 @@ luce B	<-----|            |<------- Sensore luce B
 #define pin_luceB      3
 #define pin_premiA     4
 #define pin_premiB     5
-#define FALSE 0
-#define TRUE 1
+
 
 Servo servoA;
 Servo servoB;
 
-bool servoAon=FALSE;
-bool servoBon=FALSE;
+bool servoAon=false;
+bool servoBon=false;
 
 #define SOGLIA   400
 
@@ -73,14 +72,14 @@ void loop(){
   if ((abs(millis()-tempoC))>1000){
     tempoC=millis();
     if (servoAon){
-      servoAon=FALSE;
+      servoAon=false;
       servoA.write(0);
     }
   }
   if ((abs(millis()-tempoD))>1000){
     tempoD=millis();
     if (servoBon){
-      servoBon=FALSE;
+      servoBon=false;
       servoB.write(0);
     }
   }    
@@ -94,12 +93,12 @@ void loop(){
     tempoB=millis();
   }
   if (digitalRead(pin_premiA)){
-    servoAon=TRUE;
+    servoAon=true;
     servoA.write(90);
     tempoC=millis();
   }
   if (digitalRead(pin_premiB)){
-    servoBon=TRUE;
+    servoBon=true;
     servoB.write(90);
     tempoD=millis();
   }  
