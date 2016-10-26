@@ -19,9 +19,11 @@
 // domande (IN)
 #define MASTCa 150 // leggi tempo led A/B/C
 #define MASTCb 151 // leggi tempo led D
+#define MASTCc 152 // get stato leds
 // risposte (OUT)
 #define CALDAa   1010 // get tempo led A/B/C
 #define CALDAb   1011 // get tempo led D
+#define CALDAc   1012 // get stato leds
 
 #define AGCdelay 1000
 #define SOGLIA   400
