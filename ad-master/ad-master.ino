@@ -323,10 +323,10 @@ void loop(){
 	case LUCEpoca:
 	  CARATTERI += String(char(SIMBlivA));
 	  break;
-	case :
+	case LUCEmedia:
 	  CARATTERI+= char(SIMBlivD);	  
 	  break;
-	case LUCEon:
+	case LUCEtanta:
 	  CARATTERI+= char(SIMBlivF);	  
 	  break;	  
 	}
