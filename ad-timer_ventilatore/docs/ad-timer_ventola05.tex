@@ -1,0 +1,56 @@
+{\scriptsize
+\begin{tikzpicture}[align=center,minimum height=3mm,node distance=7mm,scale=0.85, every node/.style={scale=0.85},
+affermativo/.style={anchor=south east},
+negativo/.style={anchor=south west},
+testo/.style={draw,text width=2cm,anchor=north},
+testoC/.style={text width=3.5cm,anchor=center},
+condiz/.style={draw,diamond,aspect=4,text width=3.5cm},
+cerchio/.style={draw,circle,text width=0.3cm}
+]
+\node[cerchio](xa){}; 	
+%--
+\node[condiz,below = of xa,anchor=north](a){}; \node[testoC] at (a.center){oreProgrammate = 0?};
+\draw [-latex] (xa) -- (a);		
+\node[affermativo] (si) at (a.west){si};
+\node[negativo] (no) at (a.east){no};
+%--
+\node[testo,left=of a](t){LED1=off\\LED2=off\\LED3=off\\LED4=off};
+\draw [-latex] (a) -- (t);		
+\node[cerchio,left=of t](xa){};
+\draw [-latex] (t) -- (xa);		
+%----
+\node[condiz,below = of no,anchor=north](b){}; \node[testoC] at (b.center){oreProgrammate = 1?};
+\draw [-latex] (a) -| (b);		
+\node[affermativo] (si) at (b.west){si};
+\node[negativo] (no) at (b.east){no};
+%--
+\node[testo,left=of b](t){LED1=on\\LED2=off\\LED3=off\\LED4=off};
+\draw [-latex] (b) -- (t);		
+\node[cerchio,left=of t](xa){};
+\draw [-latex] (t) -- (xa);		
+%----
+\node[condiz,below = of no,anchor=north](a){}; \node[testoC] at (a.center){oreProgrammate = 2?};
+\draw [-latex] (b) -| (a);		
+\node[affermativo] (si) at (a.west){si};
+\node[negativo] (no) at (a.east){no};
+%--
+\node[testo,left=of a](t){LED1=on\\LED2=on\\LED3=off\\LED4=off};
+\draw [-latex] (a) -- (t);		
+\node[cerchio,left=of t](xa){};
+\draw [-latex] (t) -- (xa);	
+%----
+\node[condiz,below = of no,anchor=north](b){}; \node[testoC] at (b.center){oreProgrammate = 3?};
+\draw [-latex] (a) -| (b);		
+\node[affermativo] (si) at (b.west){si};
+\node[negativo] (no) at (b.east){no};
+%--
+\node[testo,left=of b](t){LED1=on\\LED2=on\\LED3=on\\LED4=off};
+\draw [-latex] (b) -- (t);		
+\node[cerchio,left=of t](xa){};
+\draw [-latex] (t) -- (xa);	
+%--
+\node[testo,right=of b](t){LED1=on\\LED2=on\\LED3=on\\LED4=on};
+\draw [-latex] (b.east) -- (t);		
+\node[cerchio,right=of t](xa){};
+\draw [-latex] (t) -- (xa);	 
+\end{tikzpicture}}

@@ -1,0 +1,141 @@
+{\scriptsize
+\begin{tikzpicture}[align=center,minimum height=3mm,node distance=5mm,scale=0.5, every node/.style={scale=0.5},
+affermativo/.style={anchor=south east},
+negativo/.style={anchor=south west},
+testo/.style={draw,text width=3.5cm,anchor=north},
+testoC/.style={text width=3.5cm,anchor=center},
+condiz/.style={draw,diamond,aspect=4,text width=3.5cm},
+cerchio/.style={draw,circle,text width=0.3cm}
+]
+\node[cerchio](xa){}; 	
+%--
+\node[condiz,below = of xa,anchor=north](a){}; \node[testoC] at (a.center){pulsStatoPrecedente = HIGH?};
+\draw [-latex] (xa) -- (a);		
+\node[affermativo] (si) at (a.west){si};
+\node[negativo] (no) at (a.east){no};
+%--
+\node[testo,below = of si,xshift=-3cm](b){PulsStatoPrecedente = LOW};
+\draw [-latex] (a.west) -| (b);	
+\node[testo,below = of b](aa){contaRilasciato = 0;};
+\draw [-latex] (b) -- (aa);		
+%\node[testo,below = of aa](b){segno = 0};
+%\draw [-latex] (aa) -- (b);				
+%--	
+\node[cerchio,below = of aa,anchor=north ](xa){}; 	
+\draw [-latex] (aa) -- (xa);		
+%----
+\node[testo,below = of no,xshift=1cm](b){contaRilasciato += 1};	
+\draw [-latex] (a.east) -| (b);		
+%----
+\node[condiz,below = of b](aaa){}; \node[testoC] at (aaa.center){> tempoLungo?}; %->>
+\node[affermativo] (si) at (aaa.west){si};
+\node[negativo] (noA) at (aaa.east){no};	
+\draw [-latex] (b) -- (aaa);		
+%--
+\node[condiz,below = of si](bb){}; \node[testoC] at (bb.center){giaPassato <> 4?};
+\node[affermativo] (si) at (bb.west){si};
+\node[negativo] (no) at (bb.east){no};	
+\draw [-latex] (aaa) -| (bb);
+%--
+\node[testo,below = of si,xshift=-1cm](b){giaPassato = 4};
+\draw [-latex] (bb.west) -| (b);	
+%--
+\node[testo,below = of b,fill=cyan!40](a){FUNZIONE D};
+\draw [-latex] (b) -- (a);		
+%--	
+\node[cerchio, below = of a,anchor=north ](xa){}; 	
+\draw [-latex] (a) -- (xa);					
+%--	
+\node[cerchio, right = of bb,anchor=north west,yshift=-0.5cm,xshift=-0.5cm](xa){}; 	
+\draw [-latex] (bb) -| (xa);				
+%----
+\node[condiz,below = of noA,xshift=2.5cm](aaB){}; \node[testoC] at (aaB.center){> tempoLinea?}; %->>
+\node[affermativo] (si) at (aaB.west){si};
+\node[negativo] (noB) at (aaB.east){no};	
+\draw [-latex] (aaa) -| (aaB);		
+%--
+\node[condiz,below = of si](bb){}; \node[testoC] at (bb.center){giaPassato <> 3?};
+\node[affermativo] (si) at (bb.west){si};
+\node[negativo] (no) at (bb.east){no};	
+\draw [-latex] (aaB) -| (bb);
+%--
+\node[testo,below = of si,xshift=-1cm](b){giaPassato = 3};
+\draw [-latex] (bb.west) -| (b);	
+%--
+\node[testo,below = of b,fill=cyan!40](a){FUNZIONE C};
+\draw [-latex] (b) -- (a);		
+%--	
+\node[cerchio, below = of a,anchor=north ](xa){}; 	
+\draw [-latex] (a) -- (xa);					
+%--	
+\node[cerchio, right = of bb,anchor=north west,yshift=-0.5cm](xa){}; 	
+\draw [-latex] (bb) -| (xa);	
+%----
+\node[condiz,below = of noB,xshift=2.5cm](aaC){}; \node[testoC] at (aaC.center){> tempoPunto?}; %->>
+\node[affermativo] (si) at (aaC.west){si};
+\node[negativo] (noC) at (aaC.east){no};	
+\draw [-latex] (aaB) -| (aaC);		
+%--
+\node[condiz,below = of si](bb){}; \node[testoC] at (bb.center){giaPassato <> 2?};
+\node[affermativo] (si) at (bb.west){si};
+\node[negativo] (no) at (bb.east){no};	
+\draw [-latex] (aaC) -| (bb);
+%--
+\node[testo,below = of si,xshift=-1cm](b){giaPassato = 2};
+\draw [-latex] (bb.west) -| (b);	
+%--
+\node[testo,below = of b,fill=cyan!40](a){FUNZIONE B};
+\draw [-latex] (b) -- (a);		
+%--	
+\node[cerchio, below = of a,anchor=north ](xa){}; 	
+\draw [-latex] (a) -- (xa);					
+%--	
+\node[cerchio, right = of bb,anchor=north west,yshift=-0.5cm](xa){}; 	
+\draw [-latex] (bb) -| (xa);		
+%----
+\node[condiz,below = of noC,xshift=2.5cm](aaD){}; \node[testoC] at (aaD.center){> tempoDisturbo?}; %->>
+\node[affermativo] (si) at (aaD.west){si};
+\node[negativo] (noD) at (aaD.east){no};	
+\draw [-latex] (aaC) -| (aaD);		
+%--
+\node[condiz,below = of si](bb){}; \node[testoC] at (bb.center){giaPassato <> 1?};
+\node[affermativo] (si) at (bb.west){si};
+\node[negativo] (no) at (bb.east){no};	
+\draw [-latex] (aaD) -| (bb);
+%%--
+\node[testo,below = of si,xshift=-1cm](b){giaPassato = 1};
+\draw [-latex] (bb.west) -| (b);	
+%%--
+\node[testo,below = of b,fill=cyan!40](a){FUNZIONE A};
+\draw [-latex] (b) -- (a);		
+%%--
+%\node[testo,below = of a](b){segno = 0};
+%\draw [-latex] (a) -- (b);		
+%%--	
+\node[cerchio, below = of a,anchor=north ](xa){}; 	
+\draw [-latex] (a) -- (xa);					
+%%--	
+\node[cerchio, right = of bb,anchor=north west,yshift=-0.5cm](xa){}; 	
+\draw [-latex] (bb) -| (xa);	
+%%--	
+%\node[testo,below = of noD,yshift=-2cm](b){giaPassato = 0};
+%\draw [-latex] (aaD) -| (b);		
+%%--
+%\node[cerchio, below = of b,anchor=north ](xa){}; 	
+%\draw [-latex] (b) -- (xa);		
+%----
+\node[condiz,below = of noD,xshift=2cm](bb){}; \node[testoC] at (bb.center){giaPassato <> 0?};
+\node[affermativo] (si) at (bb.west){si};
+\node[negativo] (no) at (bb.east){no};	
+\draw [-latex] (aaD) -| (bb);
+%%--
+\node[testo,below = of si,yshift=-3mm](b){giaPassato = 0};
+\draw [-latex] (bb) -| (b);	
+%--
+\node[cerchio, below = of b,anchor=north ](xa){}; 	
+\draw [-latex] (b) -- (xa);					
+%--
+\node[cerchio, below = of no,anchor=north ](xa){}; 	
+\draw [-latex] (bb) -| (xa);					
+\end{tikzpicture}
+}

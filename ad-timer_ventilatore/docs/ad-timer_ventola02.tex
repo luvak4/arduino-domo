@@ -1,0 +1,42 @@
+{\scriptsize
+\begin{tikzpicture}[align=center,minimum height=5mm,node distance=4mm,
+affermativo/.style={anchor=south east},
+negativo/.style={anchor=south west},
+testo/.style={draw,text width=3cm,anchor=north},
+testoC/.style={text width=3.5cm,anchor=center},
+condiz/.style={draw,diamond,aspect=4,text width=3.5cm},
+cerchio/.style={draw,circle,text width=0.7cm}
+]
+%--
+\node[cerchio,text width=3mm,](a){};
+\node [testo,cloud,cloud puffs=11,draw,cloud ignores aspect, fill=white,below=of a] (b)  {Orologio};
+\draw [-latex] (a) -- (b);
+%--
+\node[left = of b](decimo){Ogni decimo di Sec};	
+\draw [-latex] (b) -- (decimo);	
+\node[right = of b](sec){Ogni Sec};	
+\draw [-latex] (b) -- (sec);	
+%--
+\node[condiz,below = of decimo](a){}; \node[testoC] at (a.center){pulsante premuto?};
+\draw [-latex] (decimo) -- (a);	
+\node[affermativo] (si) at (a.west){si};
+\node[negativo] (no) at (a.east){no};
+%--
+\node[testo,below = of si,fill=cyan!40](bsi){chkPremuto};	
+\draw [-latex] (a.west) -| (bsi);	
+\node[testo,below = of no,fill=cyan!40](bno){chkRilasciato};	
+\draw [-latex] (a.east) -| (bno);		
+%--
+\node[cerchio,text width=3mm,below = of bsi](b){};	
+\draw [-latex] (bsi) -- (b);			
+\node[cerchio,text width=3mm,below = of bno](b){};	
+\draw [-latex] (bno) -- (b);			
+%--	
+\node[testo,below = of sec,fill=cyan!40](bsi){chkTempo};	
+\draw [-latex] (sec) -- (bsi);
+\node[testo,below = of bsi,fill=cyan!40](b){setLEDs};	
+\draw [-latex] (bsi) -- (b);
+\node[cerchio,text width=3mm,below = of b](a){};	
+\draw [-latex] (b) -- (a); 			
+\end{tikzpicture}
+}

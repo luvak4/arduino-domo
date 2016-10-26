@@ -1,0 +1,105 @@
+{\scriptsize
+\begin{tikzpicture}[align=center,minimum height=3mm,node distance=4mm,scale=0.85, every node/.style={scale=0.85},
+affermativo/.style={anchor=south east},
+negativo/.style={anchor=south west},
+testo/.style={draw,text width=3.5cm,anchor=north},
+testoC/.style={text width=3.5cm,anchor=center},
+condiz/.style={draw,diamond,aspect=4,text width=3.5cm},
+cerchio/.style={draw,circle,text width=0.3cm}
+]
+\node[cerchio](xa){}; 	
+%--
+\node[testo,below=of xa](t){dutyCycle += 1};
+\draw [-latex] (xa) -- (t);		
+\node[condiz,below = of t,anchor=north](a){}; \node[testoC] at (a.center){> 9?};
+\draw [-latex] (t) -- (a);		
+\node[affermativo] (si) at (a.west){si};
+\node[negativo] (no) at (a.east){no};
+%--
+\node[cerchio,below = of a,anchor=north ](xa){}; 	
+\draw [-latex] (a.east) |- (xa);		
+%--
+\node[testo,left=of a](t){dutyCycle = 0};
+\draw [-latex] (a.west) -- (t);		
+\draw [-latex] (t) |- (xa);		
+%--
+\node[condiz,below = of xa,anchor=north](aaa){}; \node[testoC] at (aaa.center){> 0?};
+\draw [-latex] (xa) -- (aaa);		
+\node[affermativo] (si) at (aaa.west){si};
+\node[negativo] (no) at (aaa.east){no};
+%/////////////////////////////////////////////////////////
+\node[testo,left=of aaa](t){Qa = millis()};
+\draw [-latex] (aaa) -- (t);		
+%--
+\node[condiz,below = of t,anchor=north](a){}; \node[testoC] at (a.center){Qa >= Pa?};
+\draw [-latex] (t) -- (a);		
+\node[affermativo] (si) at (a.west){si};
+\node[negativo] (no) at (a.east){no};
+%--
+\node[testo,text width=2cm,right=of a](t){Pa = Qa};
+\draw [-latex] (a) -- (t);		
+%--
+\node[cerchio,below = of t,anchor=north ](xa){}; 	
+\draw [-latex] (t) -- (xa);		
+%----
+\node[testo,below=of a](t){DIFFa = Qa - Pa}; %->>
+\draw [-latex] (a.west) |- (t);		
+%--
+\node[testo,below=of t](a){Xa = DIFFa - 100};
+\draw [-latex] (t) -- (a);		
+%--
+\node[condiz,below = of a,anchor=north](b){}; \node[testoC] at (b.center){Xa >= 0?};
+\draw [-latex] (a) -- (b);		
+\node[affermativo] (si) at (b.west){si};
+\node[negativo] (no) at (b.east){no};
+%--
+\node[cerchio,right = of b](xa){}; 	
+\draw [-latex] (b) -- (xa);		
+%----
+\node[testo,below=of b](t){Pa = Qa - Xa};
+\draw [-latex] (b.west) |- (t);		
+%----
+\node[circle,text width=2cm,below=of t,fill=cyan!40](b){Ogni decimo di sec};
+\draw [-latex] (t) -- (b);		
+%--
+\node[cerchio,below = of b](xa){}; 	
+\draw [-latex] (b) -- (xa);		
+%/////////////////////////////////////////////////////////
+\node[testo,right=of aaa](t){Qb = millis()};
+\draw [-latex] (aaa) -- (t);		
+%--
+\node[condiz,below = of t,anchor=north](a){}; \node[testoC] at (a.center){Qb >= Pb?};
+\draw [-latex] (t) -- (a);		
+\node[affermativo] (si) at (a.west){si};
+\node[negativo] (no) at (a.east){no};
+%--
+\node[testo,text width=2cm,right=of a](t){Pb = Qb};
+\draw [-latex] (a) -- (t);		
+%--
+\node[cerchio,below = of t,anchor=north ](xa){}; 	
+\draw [-latex] (t) -- (xa);		
+%----
+\node[testo,below=of a](t){DIFFb = Qb - Pb}; %->>
+\draw [-latex] (a.west) |- (t);		
+%--
+\node[testo,below=of t](a){Xb = DIFFb - 1000};
+\draw [-latex] (t) -- (a);		
+%--
+\node[condiz,below = of a,anchor=north](b){}; \node[testoC] at (b.center){Xb >= 0?};
+\draw [-latex] (a) -- (b);		
+\node[affermativo] (si) at (b.west){si};
+\node[negativo] (no) at (b.east){no};
+%--
+\node[cerchio,right = of b](xa){}; 	
+\draw [-latex] (b) -- (xa);		
+%----
+\node[testo,below=of b](t){Pb = Qb - Xb};
+\draw [-latex] (b.west) |- (t);		
+%----
+\node[circle,text width=2cm,below=of t,fill=cyan!40](b){Ogni Sec};
+\draw [-latex] (t) -- (b);		
+%--
+\node[cerchio,below = of b](xa){}; 	
+\draw [-latex] (b) -- (xa);		
+\end{tikzpicture}
+}

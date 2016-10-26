@@ -1,0 +1,93 @@
+{\scriptsize
+\begin{tikzpicture}[align=center,minimum height=3mm,node distance=7mm,scale=0.85, every node/.style={scale=0.85},
+affermativo/.style={anchor=south east},
+negativo/.style={anchor=south west},
+testo/.style={draw,text width=3cm,anchor=north},
+testoC/.style={text width=3.5cm,anchor=center},
+condiz/.style={draw,diamond,aspect=4,text width=3.5cm},
+cerchio/.style={draw,circle,text width=0.3cm}
+]
+\node[cerchio](xa){}; 	
+%--
+\node[condiz,below = of xa,anchor=north](a){}; \node[testoC] at (a.center){\conteggioAttivo?};
+\draw [-latex] (xa) -- (a);		
+\node[affermativo] (si) at (a.west){si};
+\node[negativo] (no) at (a.east){no};
+%--
+\node[cerchio,below = of no,anchor=north ](xa){}; 	
+\draw [-latex] (a.east) -| (xa);		
+%--
+\node[testo,text width=3.5cm,below = of si](b){\tempoAspegnimento -= 1};	
+\draw [-latex] (a) -| (b);
+%--
+\node[condiz,below = of b,](bb){}; \node[testoC] at (bb.center){\tempoAspegnimento = 0?};
+\node[affermativo] (si) at (bb.west){si};
+\node[negativo] (no) at (bb.east){no};	
+\draw [-latex] (b) -- (bb);
+%--
+\node[testo,below = of si](a){\oreProgrammate = 0};	
+\draw [-latex] (bb) -| (a);	
+\node[testo,below = of a](b){conteggioAttivo = false};	
+\draw [-latex] (a) -- (b);	
+\node[below = of b](a){RELE OFF};	
+\draw [-latex] (b) -- (a);	
+%--
+\node[cerchio,below = of a,anchor=north ](xa){}; 
+\draw [-latex] (a) -- (xa);		
+%--		
+\node[condiz,below = of no](aa){}; \node[testoC] at (aa.center){> stepOraD?};
+\node[affermativo] (si) at (aa.west){si};
+\node[negativo] (no) at (aa.east){no};	
+\draw [-latex] (bb.east) -| (aa);
+%--
+\node[cerchio,below = of si](xa){}; 
+\draw [-latex] (aa) -| (xa);	
+%--		
+\node[condiz,below = of no](a){}; \node[testoC] at (a.center){> stepOraC?};
+\node[affermativo] (si) at (a.west){si};
+\node[negativo] (no) at (a.east){no};	
+\draw [-latex] (aa.east) -| (a);		
+%--
+\node[testo,below = of si](b){\oreProgrammate = 4};	
+\draw [-latex] (a) -| (b);		
+\node[below = of b](c){RELE ON};		
+\draw [-latex] (b) -- (c);	
+%--
+\node[cerchio,below = of c,anchor=north ](xa){}; 
+\draw [-latex] (c) -- (xa);		
+%--		
+\node[condiz,below = of no](b){}; \node[testoC] at (b.center){> stepOraB?};
+\node[affermativo] (si) at (b.west){si};
+\node[negativo] (no) at (b.east){no};	
+\draw [-latex] (a.east) -| (b);
+%--
+\node[testo,below = of si](a){\oreProgrammate = 3};	
+\draw [-latex] (b) -| (a);		
+\node[below = of a](c){RELE ON};		
+\draw [-latex] (a) -- (c);		
+%--
+\node[cerchio,below = of c,anchor=north ](xa){}; 
+\draw [-latex] (c) -- (xa);		
+%--		
+\node[condiz,below = of no](aa){}; \node[testoC] at (aa.center){> stepOraA?};
+\node[affermativo] (si) at (aa.west){si};
+\node[negativo] (no) at (aa.east){no};	
+\draw [-latex] (b.east) -| (aa);
+%--
+\node[testo,below = of si](b){\oreProgrammate = 2};	
+\draw [-latex] (aa) -| (b);		
+\node[below = of b](c){RELE ON};		
+\draw [-latex] (b) -- (c);		
+%--
+\node[cerchio,below = of c,anchor=north ](xa){}; 
+\draw [-latex] (c) -- (xa);	
+%--
+\node[testo,below =  of no](a){\oreProgrammate = 1};	
+\draw [-latex] (aa) -| (a);		
+\node[below = of a](c){RELE ON};		
+\draw [-latex] (a) -- (c);		
+%--
+\node[cerchio,below = of c,anchor=north ](xa){}; 
+\draw [-latex] (c) -- (xa);	
+\end{tikzpicture}
+}
