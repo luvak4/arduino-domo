@@ -33,6 +33,8 @@ luce B	<-----|            |<------- Sensore luce B
 #define pin_luceB      3
 #define pin_premiA     4
 #define pin_premiB     5
+#define FALSE 0
+#define TRUE 1
 
 Servo servoA;
 Servo servoB;
@@ -44,7 +46,8 @@ bool servoBon=FALSE;
 
 unsigned long tempoA;
 unsigned long tempoB;
-
+unsigned long tempoC;
+unsigned long tempoD;
 void setup() {
   pinMode(pin_luceA,OUTPUT);
   pinMode(pin_luceB,OUTPUT);
@@ -90,12 +93,12 @@ void loop(){
     digitalWrite(pin_luceB,HIGH);
     tempoB=millis();
   }
-  if (digitalRead(pin_PremiA)){
+  if (digitalRead(pin_premiA)){
     servoAon=TRUE;
     servoA.write(90);
     tempoC=millis();
   }
-  if (digitalRead(pin_PremiB)){
+  if (digitalRead(pin_premiB)){
     servoBon=TRUE;
     servoB.write(90);
     tempoD=millis();
