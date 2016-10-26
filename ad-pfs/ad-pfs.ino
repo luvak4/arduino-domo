@@ -1,3 +1,14 @@
+////////////////////////////////
+// pf-Sense spegnitore
+////////////////////////////////
+
+// nasce per spegnere via radio
+// un server PfSense, inviando comandi
+// di shutdown/reboot attraverso
+// la seriale. Legge lo stato interpretando
+// quando PfSense invia a sua volta - in risposta - 
+// sulla seriale
+
 #include <VirtualWire.h>
 const int led_pin = 13;
 const int led_rosso_pin = 2;
