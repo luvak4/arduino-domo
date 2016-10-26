@@ -1,15 +1,19 @@
 ////////////////////////////////
 // TASTIERA
 ////////////////////////////////
+//
+// visualizza del testo arbitrario inviato via
+// radio su display LCM tipo 44780
+//
 /*
       	      	+-----------+
-  	          	|           |
+  	        |           |
                 |           |         
          IR --->| 2         |
                 |           |
    radio rx --->| 11     12 |---> radio tx
-            		|           |
-  		          +-----------+
+            	|           |
+  		+-----------+
                    ARDUINO
                   ATMEGA 328
 */
