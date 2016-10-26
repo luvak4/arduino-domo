@@ -8,16 +8,16 @@
 // domande (che ripeterà) da dispositivi nelle vicinanze
 
 /*
-  	       	+-----------+
-  	       	|           |
-                |           |         
-         IR --->| 2         |
-                |           |
-   radio rx --->| 11     12 |---> radio tx
-          	|           |
-                +-----------+
-                   ARDUINO
-                  ATMEGA 328
+  	       	 +-----------+
+             |           |
+             |           |         
+      IR --->| 2         |
+             |           |
+radio rx --->| 11     12 |---> radio tx
+          	 |           |
+             +-----------+
+                ARDUINO
+              ATMEGA 328
 */
 
 /*////////////////////////////////
@@ -67,6 +67,9 @@ const int pin_ir  =  2; // ir pin
 #define MASTRp 116 // rele ON                          (CANTIa)
 #define MASTRq 117 // rele OFF                         (CANTIa)
 #define MASTRr 118 // rele toggle                      (CANTIa)
+#define MASTRpp 119 // rele B ON                          (CANTIa)
+#define MASTRqq 120 // rele B OFF                         (CANTIa)
+#define MASTRrr 121 // rele B toggle                      (CANTIa)
 /*--------------------------------
 ** risposte (IN)
 */
