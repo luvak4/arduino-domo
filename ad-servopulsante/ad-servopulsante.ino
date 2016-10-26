@@ -2,20 +2,25 @@
 // SERVO PULSANTE
 ////////////////////////////////
 
+// è una interfaccia che spegne e accende dispositivi
+// elettrici che hanno solo un pulsante per lo
+// spegnimento. Rende disponibile anche lo stato dei dispositivi
+// usando le spie già in essere.
+
 /*
-		            +------------+
-		            |            |
-	premi A	 ---->|            |-------> Servo A
-		            |            |
-	premi B	 ---->|            |-------> Servo B
-		            |            |
-		            |            |
-	luce A	<-----|            |<------- Sensore luce A
-		            |            |
-	luce B	<-----|            |<------- Sensore luce B
-		            |            |
-		            +------------+
-                  atmega328
+              +------------+
+              |            |
+premi A	 ---->|            |-------> Servo A
+              |            |
+premi B	 ---->|            |-------> Servo B
+              |            |
+              |            |
+luce A	<-----|            |<------- Sensore luce A
+              |            |
+luce B	<-----|            |<------- Sensore luce B
+              |            |
+              +------------+
+                atmega328
 */
 #include <Servo.h>
 
