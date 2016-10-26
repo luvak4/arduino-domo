@@ -22,7 +22,9 @@ luce B	<-----|            |<------- Sensore luce B
               +------------+
                 atmega328
 */
-#include <Servo.h>
+#include <VirtualWire.h>
+#include <ServoTimer2.h> 
+
 
 #define pin_photoA    A0
 #define pin_photoB    A1
@@ -35,8 +37,8 @@ luce B	<-----|            |<------- Sensore luce B
 #define pin_premiB     5
 
 
-Servo servoA;
-Servo servoB;
+ServoTimer2 servoA;
+ServoTimer2 servoB;
 
 bool servoAon=false;
 bool servoBon=false;
@@ -52,7 +54,10 @@ void setup() {
   pinMode(pin_luceB,OUTPUT);
   pinMode(pin_premiA,INPUT);
   pinMode(pin_premiB,INPUT);  
+  servoA.attach(pin_servoA);
+  servoB.attach(pin_servoB);
   Serial.begin(9600); // debug
+  //servoA.write(1000);
 }
 
 void loop(){
