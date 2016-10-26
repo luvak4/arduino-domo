@@ -542,7 +542,7 @@ void cipher(){
 void EEPROMsaveRele(){
   byte n=digitalRead(pin_releB);
   n = n<<1;
-  n=n & digitalRead(pin_releA);
+  n=n || digitalRead(pin_releA);
   EEPROM.write(EEPrele,n);
 }
 /*--------------------------------
