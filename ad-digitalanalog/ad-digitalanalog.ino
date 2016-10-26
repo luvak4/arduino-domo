@@ -281,31 +281,37 @@ void loop(){
       case MASTRp:
 	// rele ON
 	digitalWrite(pin_releA,HIGH);
+  EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
       case MASTRq:
 	// rele OFF
 	digitalWrite(pin_releA,LOW);
+  EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
       case MASTRr:
 	// rele TOGGLE
 	digitalWrite(pin_releA,!digitalRead(pin_releA));
+  EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
       case MASTRpp:
 	// rele ON
 	digitalWrite(pin_releB,HIGH);
+  EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
       case MASTRqq:
 	// rele OFF
 	digitalWrite(pin_releB,LOW);
+  EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
       case MASTRrr:
 	// rele TOGGLE
 	digitalWrite(pin_releB,!digitalRead(pin_releB));
+  EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
 
