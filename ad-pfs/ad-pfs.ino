@@ -26,10 +26,10 @@ const int pin_tx = 12;
 */
 #define ST_FIRSTBOOT    1
 #define ST_BOOTING      2
-#define ST_DOOFF_A      3
-#define ST_DOOFF_B      4
-#define ST_DOOFF_C      5
-#define ST_DOOFF_D      6
+#define ST_OFF_A      3
+#define ST_OFF_B      4
+#define ST_OFF_C      5
+#define ST_OFF_D      6
 #define ST_DOREBOOT_A   7
 #define ST_DOREBOOT_B   8
 #define ST_DOREBOOT_C   9
@@ -61,21 +61,22 @@ byte CIFR[]={223,205,228,240,43,146,241,//
          87,213,48,235,131,6,81,26,//
          70,34,74,224,27,111,150,22,//
          138,239,200,179,222,231,212};
-#define mask 0x00FF
-int     INTERIlocali[4]={0,0,0,0}; // N.Mess,Da,Db,Dc
-byte    BYTEradio[BYTEStoTX];
-uint8_t buflen = BYTEStoTX; //for rx
+#define mask        0x00FF
 #define VELOCITAstd   500   // velocita standard
 #define MESSnum         0   // posizione in BYTEradio
 #define DATOa           1   //  "
 #define DATOb           2   //  "
 #define DATOc           3   //  "
 #define BYTEStoTX       8   // numbero of bytes to tx
-#define AGCdelay 1000       // delay for AGC
+//#define AGCdelay      1000  // delay for AGC
+int     INTERIlocali[4]={0,0,0,0}; // N.Mess,Da,Db,Dc
+byte    BYTEradio[BYTEStoTX];
+uint8_t buflen = BYTEStoTX; //for rx
 /*--------------------------------
 ** varie
 */
 byte intlStep=ST_FIRSTBOOT;
+unsigned long tempo;
 //
 /*////////////////////////////////
 * setup()
@@ -109,7 +110,7 @@ void loop() {
       break;
     case MASTPb:
       if(intlStep==ST_ON){
-	intlStep=ST_DOOFF_A;
+	intlStep=ST_OFF_A;
       }
       break;
     case MASTPc:
@@ -122,41 +123,50 @@ void loop() {
   /*--------------------------------
   ** internal steps
   */
-  //ogni paio di secondi
+  //ogni secondo
+  if (abs(millis()-tempo>1000)){
+    tempo=millis();
   switch (intlStep){
   case ST_FIRSTBOOT:
-    if(ckSerial("PC Engines ALIX")){
+     if (Serial.available()) {
+     if (Serial.find("PC Engines ALIX")){
       intlStep=ST_BOOTING;
       txStat(LUCEGIALLA);
     }
+     }
     break;
   case ST_BOOTING:
-    if(ckSerial("Enter an option")){
+    if (Serial.available()) {
+     if (Serial.find("Enter an option")){
       intlStep=ST_ON;
       txStat(LUCEVERDE);
     }
+    }
     break;
-  }
   //--- halt
- case ST_DOOFF_A:
+ case ST_OFF_A:
    Serial.write("6\n");
-   intlStep=ST_DOOFF_B;
+   intlStep=ST_OFF_B;
    break;
- case ST_DOOFF_B:
-   if(ckSerial("proceed")){
-     intlStep=ST_DOOFF_C;
+ case ST_OFF_B:
+   if (Serial.available()) {
+     if (Serial.find("proceed")){
+     intlStep=ST_OFF_C;
      txStat(LUCEGIALLA);
    }
+   }
    break;
- case ST_DOOFF_C:
+ case ST_OFF_C:
    Serial.write("y\n");
-   intlStep=ST_DOOFF_D;
+   intlStep=ST_OFF_D;
    break;    
- case ST_DOOFF_D:
-   if(ckSerial("has halted")){
+ case ST_OFF_D:
+   if (Serial.available()) {
+     if (Serial.find("has halted")){
      intlStep=ST_FIRSTBOOT;
      txStat(LUCEROSSA);
    }
+     }
    break;
    //-- rebooting
  case ST_DOREBOOT_A:
@@ -164,22 +174,32 @@ void loop() {
    intlStep=ST_DOREBOOT_B;
    break;
  case ST_DOREBOOT_B:
-   if(ckSerial("proceed")){
+   if (Serial.available()) {
+     if (Serial.find("proceed")){
      intlStep=ST_DOREBOOT_C;
      txStat(LUCEGIALLA);
    }
+     }
    break;
  case ST_DOREBOOT_C:
    Serial.write("y\n");
    intlStep=ST_DOREBOOT_D;
    break;
  case ST_DOREBOOT_D:
-   if(ckSerial("rebooting")){
+   if (Serial.available()) {
+     if (Serial.find("rebooting")){
      intlStep=ST_FIRSTBOOT;
      txStat(LUCEROSSA);
+     }
    }
-   break;    
+   break; 
+  }
+  }
 }
+/*--------------------------------
+* txStat()
+*/
+//
 void txStat(byte stato){
   digitalWrite(pin_rosso,LOW);
   digitalWrite(pin_giallo,LOW);
@@ -196,19 +216,7 @@ void txStat(byte stato){
     break;
   }
 }
-/*--------------------------------
-* ckSerial()
-*/
-//
-bool ckSerial(String text){
-  if (Serial.available() > 0) {
-    if (Serial.find(text)){
-      return true;
-    } else {
-      return false;
-    }
-  }
-}
+
 /*--------------------------------
 * decodeMessage()
 */
