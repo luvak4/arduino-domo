@@ -1,3 +1,5 @@
+// -*-c++-*-
+// fare routine per pulsanti
 ////////////////////////////////
 // DIGITAL-ANALOG
 ////////////////////////////////
@@ -6,7 +8,7 @@
 // Oltre ai valori "RAW" vengono resi disponibili
 // via radio anche lo stato (temperatura in salita/discesa; luce bassa/media/alta)
 // e il tempo di ogni fase (da quanto tempo in salita/discesa, etc.).
-// Via radio è inoltre possibile comandare due relè a distanza e 
+// Via radio e' inoltre possibile comandare due rele a distanza e 
 // conoscere lo stato di commutazione di ognuno.
 
 /*
@@ -14,8 +16,10 @@
                 |           |
    light    --->| A0      2 |---> rele A
    temperat --->| A1      3 |---> rele B
-  man.releB --->| 5         |
-  man.releA --->| 4         |
+man.interrB --->| 5         |
+man.interrA --->| 4         |
+  man.pulsA --->| 6         |
+  man.pulsB --->| 7         |
    radio rx --->| 11     12 |---> radio tx
                 |           |
                 +-----------+
@@ -33,6 +37,10 @@
 */
 #define pin_releA  2
 #define pin_releB  3
+#define pin_interA 4
+#define pin_interB 5
+#define pin_pulsA 6
+#define pin_pulsB 7
 #define pin_rx    11
 #define pin_tx    12
 #define pin_light A0
@@ -87,17 +95,23 @@
 #define CANTIokB 1005 // get ok carica eprom
 #define CANTIokC 1006 // get ok carica default
 /*--------------------------------
-** comunicazione radio principale
+** radio tx rx
 */
-#define VELOCITAstd   500
-#define MESSnum         0
-#define DATOa           1
-#define DATOb           2
-#define DATOc           3
-#define BYTEStoTX       8
-int     INTERIlocali[4]={0,0,0,0};
+byte CIFR[]={223,205,228,240,43,146,241,//
+         87,213,48,235,131,6,81,26,//
+         70,34,74,224,27,111,150,22,//
+         138,239,200,179,222,231,212};
+#define mask 0x00FF
+int     INTERIlocali[4]={0,0,0,0}; // N.Mess,Da,Db,Dc
 byte    BYTEradio[BYTEStoTX];
 uint8_t buflen = BYTEStoTX; //for rx
+#define VELOCITAstd   500   // velocita standard
+#define MESSnum         0   // posizione in BYTEradio
+#define DATOa           1   //  "
+#define DATOb           2   //  "
+#define DATOc           3   //  "
+#define BYTEStoTX       8   // numbero of bytes to tx
+#define AGCdelay 1000       // delay for AGC
 /*--------------------------------
 ** stati
 */
@@ -142,36 +156,38 @@ int AGCdelay    = agcDEF;
 /*--------------------------------
 ** varie
 */
-byte CIFR[]={223,205,228,240,43,146,241,//
-	     87,213,48,235,131,6,81,26,//
-	     70,34,74,224,27,111,150,22,//
-	     138,239,200,179,222,231,212};
-#define mask 0x00FF
 unsigned long tempo;
-byte decimi;
+byte centesimi;
 byte secondi;
 byte minuti;
+bool statoInterruttoreA;
+bool statoInterruttoreB;
+byte antirimbIntA;
+byte antirimbIntB;
 //
 /*////////////////////////////////
 * setup()
 */
 void setup() {
+  // pin
   pinMode(pin_releA, OUTPUT);
   pinMode(pin_releB, OUTPUT);
+  pinMode(pin_interA, INPUT);
+  pinMode(pin_interB, INPUT);
+  pinMode(pin_pulsA, INPUT);
+  pinMode(pin_pulsB, INPUT);
+  // radio
   vw_set_tx_pin(pin_tx);
   vw_set_rx_pin(pin_rx);
   vw_setup(VELOCITAstd);
   vw_rx_start();
   tempo=millis();
   Serial.begin(9600); // debug
-  // carica stato rele da EEPROM
-  byte n=EEPROM.read(EEPrele);
-  n=n & 1;
-  digitalWrite(pin_releA,n);
-  n=EEPROM.read(EEPrele);
-  n=n>>1;
-  n=n & 1;
-  digitalWrite(pin_releB,n);
+  // caricamento stato rele
+  EEPROMloadRele();
+  // stato interruttori iniziale
+  statoInterruttoreA=digitalRead(pin_interA);
+  statoInterruttoreB=digitalRead(pin_interB);  
 }
 //
 /*////////////////////////////////
@@ -181,15 +197,41 @@ void loop(){
 /*--------------------------------
 ** tieni il tempo
 */
-  if ((abs(millis()-tempo))>100){
+  if ((abs(millis()-tempo))>10){
     tempo=millis();
-    decimi++;
-    //BEGIN ogni decimo
-    //END   ogni decimo
-    if (decimi>9){
+    centesimi++;
+    //BEGIN ogni centesimo
+    //    
+    if ( statoInterruttoreA!=digitalRead(pin_interA)){
+      // antirimbalzo interruttore A
+      antirimbIntA++;
+    } else {
+      antirimbIntA=0;
+    }
+    if ( statoInterruttoreB!=digitalRead(pin_interB)){
+      // antirimbalzo interruttore B      
+      antirimbIntB++;
+    } else {
+      antirimbIntB=0;
+    }
+    if (antirimbIntA>9){
+      // cambio di stato rele da interruttore A
+      statoInterruttoreA=digitalRead(pin_interA);
+      digitalWrite(pin_releA,!digitalRead(pin_releA));
+      EEPROMsaveRele();      
+      antirimbIntA=0;	
+    }
+    if (antirimbIntB>9){
+      // cambio di stato rele da interruttore B      
+      statoInterruttoreB=digitalRead(pin_interB);
+      digitalWrite(pin_releB,!digitalRead(pin_releB));      
+      antirimbIntB=0;	
+    }    
+    //END   ogni centesimo
+    if (centesimi>99){
       //BEGIN ogni secondo
       //END ogni secondo
-      decimi=0;
+      centesimi=0;
       secondi++;
       if (secondi>59){
 	//BEGIN ogni minuto
@@ -282,40 +324,39 @@ void loop(){
       case MASTRp:
 	// rele ON
 	digitalWrite(pin_releA,HIGH);
-  EEPROMsaveRele();
+	EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
       case MASTRq:
 	// rele OFF
 	digitalWrite(pin_releA,LOW);
-  EEPROMsaveRele();
+	EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
       case MASTRr:
 	// rele TOGGLE
 	digitalWrite(pin_releA,!digitalRead(pin_releA));
-  EEPROMsaveRele();
+	EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
       case MASTRpp:
 	// rele ON
 	digitalWrite(pin_releB,HIGH);
-  EEPROMsaveRele();
+	EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
       case MASTRqq:
 	// rele OFF
 	digitalWrite(pin_releB,LOW);
-  EEPROMsaveRele();
+	EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
       case MASTRrr:
 	// rele TOGGLE
 	digitalWrite(pin_releB,!digitalRead(pin_releB));
-  EEPROMsaveRele();
+	EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
-
       }
       vw_rx_start();
     }
@@ -475,65 +516,6 @@ void fxSOGLIE(int& x, int INCDECx, int MAXx, int MINx) {
       x=MINx;
    }
 }
-
-/*--------------------------------
-* tx()
-*/
-void tx(){
-  // codifica in bytes
-  encodeMessage();
-  //******************************
-  // prima di trasmettere attende
-  // che l'AGC di rx-MAESTRO
-  // abbia recuperato
-  //******************************
-  delay(AGCdelay); // IMPORTANTE
-  //******************************
-  vw_rx_stop();
-  vw_send((uint8_t *)BYTEradio,BYTEStoTX);
-  vw_wait_tx();
-  vw_rx_start();
-}
-/*--------------------------------
-* decodeMessage()
-*/
-// RADIO -> locale
-//
-void decodeMessage(){
-  byte m=0;
-  cipher();
-  for (byte n=0; n<4;n++){
-    INTERIlocali[n]=BYTEradio[m+1];
-    INTERIlocali[n]=INTERIlocali[n] << 8;
-    INTERIlocali[n]=INTERIlocali[n]+BYTEradio[m];
-    m+=2;
-  }
-}
-/*--------------------------------
-* encodeMessage()
-*/
-// locale -> RADIO
-//
-void encodeMessage(){
-  byte m=0;
-  for (byte n=0; n<4;n++){
-    BYTEradio[m]=INTERIlocali[n] & mask;
-    INTERIlocali[n]=INTERIlocali[n] >> 8;
-    BYTEradio[m+1]=INTERIlocali[n] & mask;
-    m+=2;
-  }
-  cipher();
-}
-/*--------------------------------
-* cipher()
-*/
-// cifratura XOR del messaggio
-//
-void cipher(){
-  for (byte n=0;n<8;n++){
-    BYTEradio[n]=BYTEradio[n]^CIFR[n];
-  }
-}
 /*--------------------------------
 * EEPROMsaveRele()
 */
@@ -544,6 +526,21 @@ void EEPROMsaveRele(){
   n = n<<1;
   n=n || digitalRead(pin_releA);
   EEPROM.write(EEPrele,n);
+}
+/*--------------------------------
+* EEPROMloadRele()
+*/
+// salvataggio stato rele
+//
+void EEPROMloadRele(){
+  // carica stato rele da EEPROM
+  byte n=EEPROM.read(EEPrele);
+  n=n & 1;
+  digitalWrite(pin_releA,n);
+  n=EEPROM.read(EEPrele);
+  n=n>>1;
+  n=n & 1;
+  digitalWrite(pin_releB,n);
 }
 /*--------------------------------
 * EEPROMsave()
@@ -619,4 +616,62 @@ int BYTEtoINT(byte& lsb, byte& msb){
   x = x << 8;
   x = x & lsb;
   return x;
+}
+/*--------------------------------
+* decodeMessage()
+*/
+// RADIO -> locale
+//
+void decodeMessage(){
+  byte m=0;
+  cipher();
+  for (byte n=0; n<4;n++){
+    INTERIlocali[n]=BYTEradio[m+1];
+    INTERIlocali[n]=INTERIlocali[n] << 8;
+    INTERIlocali[n]=INTERIlocali[n]+BYTEradio[m];
+    m+=2;
+  }
+}
+/*--------------------------------
+* encodeMessage()
+*/
+// locale -> RADIO
+//
+void encodeMessage(){
+  byte m=0;
+  for (byte n=0; n<4;n++){
+    BYTEradio[m]=INTERIlocali[n] & mask;
+    INTERIlocali[n]=INTERIlocali[n] >> 8;
+    BYTEradio[m+1]=INTERIlocali[n] & mask;
+    m+=2;
+  }
+  cipher();
+}
+/*--------------------------------
+* cipher()
+*/
+// cifratura XOR del messaggio
+//
+void cipher(){
+  for (byte n=0;n<8;n++){
+    BYTEradio[n]=BYTEradio[n]^CIFR[n];
+  }
+}
+/*--------------------------------
+* tx()
+*/
+void tx(){
+  // codifica in bytes
+  encodeMessage();
+  //******************************
+  // prima di trasmettere attende
+  // che l'AGC di rx-MAESTRO
+  // abbia recuperato
+  //******************************
+  delay(AGCdelay); // IMPORTANTE
+  //******************************
+  vw_rx_stop();
+  vw_send((uint8_t *)BYTEradio,BYTEStoTX);
+  vw_wait_tx();
+  vw_rx_start();
 }
