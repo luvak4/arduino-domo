@@ -20,7 +20,7 @@
               |            |-------> rele A
               |            |-------> rele B
               |            |
-              |            |-------> com RS232 (pfsense)
+spegni pfs--->|            |-------> com RS232 (pfsense)
               |            |
 radio rx ---->|            |-------> radio tx
               +------------+
