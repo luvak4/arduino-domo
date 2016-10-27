@@ -1,20 +1,27 @@
+// -*-c++-*-
+// quando non si ottiene risposta entro determinato tempo
+// segnalare inviando byte conformato in un certo modo
+// *impostare la lettura automatica ogni minuto
+// *impostare la disabilitazione dell'invio a display
+// *salvare i parametri in EEPROM
+
 ////////////////////////////////
 // MASTER (ex 'tastiera')
 ////////////////////////////////
 
-// E' l'unità radio che fa domande alle pertiferiche
+// E' l'unita radio che fa domande alle pertiferiche
 // attende le risposte, le ripete per i
 // dispositivi nelle vicinanze e accetta 
-// domande (che ripeterà) da dispositivi nelle vicinanze
+// domande (che ripetera) da dispositivi nelle vicinanze
 
 /*
-  	       	 +-----------+
+             +-----------+
              |           |
              |           |         
       IR --->| 2         |
              |           |
 radio rx --->| 11     12 |---> radio tx
-          	 |           |
+             |           |
              +-----------+
                 ARDUINO
               ATMEGA 328
@@ -74,9 +81,17 @@ const int pin_ir  =  2; // ir pin
 #define MASTRab 123 // disable ogni minuto MASTRa
 #define MASTRoo 124 // ogni minuto MASTRo
 #define MASTRop 125 // disable ogni minuto MASTRo
+#define MASTRdon 126 // enable invio a display
+#define MASTRdof 127 // disable invio a display
 #define MASTCa 150 // leggi tempo led A/B/C
 #define MASTCb 151 // leggi tempo led D
 #define MASTCc 152 // get stato leds
+#define MASTSa 200 // move servoA (push button)
+#define MASTSb 201 // move servoB (push button)
+#define MASTSa 202 // get stato leds servoA and servoB
+#define MASTPa 250 // get stato leds pfSense
+#define MASTPb 251 // shutdown pfSense
+#define MASTPc 252 // reboot pfSense
 /*--------------------------------
 ** risposte (IN)
 */
@@ -90,6 +105,31 @@ const int pin_ir  =  2; // ir pin
 #define CALDAa   1010 // get tempo led A/B/C
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
+#define SERVOa   1013 // ok pushbutton A
+#define SERVOb   1014 // ok pushbutton B
+#define SERVOc   1015 // get stato leds servoA and servoB
+#define PFSENa   1016 // get status of leds
+#define PFSENb   1017 // ok shutdown
+#define PFSENc   1018 // ok reboot
+#define PFSENc   1019 // operation not possible
+/*--------------------------------
+** radio tx rx
+*/
+byte CIFR[]={223,205,228,240,43,146,241,//
+         87,213,48,235,131,6,81,26,//
+         70,34,74,224,27,111,150,22,//
+         138,239,200,179,222,231,212};
+#define mask 0x00FF
+int     INTERIlocali[4]={0,0,0,0}; // N.Mess,Da,Db,Dc
+byte    BYTEradio[BYTEStoTX];
+uint8_t buflen = BYTEStoTX; //for rx
+#define VELOCITAstd   500   // velocita standard
+#define MESSnum         0   // posizione in BYTEradio
+#define DATOa           1   //  "
+#define DATOb           2   //  "
+#define DATOc           3   //  "
+#define BYTEStoTX       8   // numbero of bytes to tx
+#define AGCdelay 1000       // delay for AGC
 /*--------------------------------
 ** LCM
 */
@@ -128,18 +168,6 @@ String  CARATTERI;
 #define RELEon              1
 #define RELEoff             0
 /*--------------------------------
-** comunicazione radio principale
-*/
-#define VELOCITAstd   500
-#define MESSnum         0
-#define DATOa           1
-#define DATOb           2
-#define DATOc           3
-#define BYTEStoTX       8
-int     INTERIlocali[4]={0,0,0,0};
-byte    BYTEradio[BYTEStoTX];
-uint8_t buflen = BYTEStoTX; //for rx
-/*--------------------------------
 ** rx infrarossi IR
 */
 #define KEY_1     -983386969
@@ -161,11 +189,6 @@ decode_results irX;    // ir variable
 /*--------------------------------
 ** varie
 */
-byte CIFR[]={223,205,228,240,43,146,241,//
-	     87,213,48,235,131,6,81,26,//
-	     70,34,74,224,27,111,150,22,//
-	     138,239,200,179,222,231,212};
-#define mask 0x00FF
 int NUMcomp=0;
 unsigned long tempo;
 byte decimi;
@@ -173,7 +196,11 @@ byte secondi;
 byte minuti;
 bool MINUTIenableAA=false;
 bool MINUTIenableOO=false;
+bool DISPLAYIenable=true;
 
+// EEPROM
+#define EEPripeti 0;
+#define EEPdisplay 1;
 /*////////////////////////////////
 * setup
 */
@@ -185,6 +212,8 @@ void setup()
   vw_rx_start();               
   irrecv.enableIRIn();
   //Serial.begin(9600);
+  EEPROMloadRipeti();
+  DISPLAYenable=EEPROM.read(EEPdisplay);
 }
 /*////////////////////////////////
 * loop()
@@ -201,22 +230,23 @@ void loop(){
     //END   ogni decimo
     if (decimi>9){
       //BEGIN ogni secondo
-      //IRricevuto-=1;
-      //if (IRricevuto==0){
-      //  NUMcomp=0;
-      //  stampaNc();
-      //}
       //END ogni secondo
       decimi=0;
       secondi++;
       if (secondi>59){
 	//BEGIN ogni minuto
- if (MINUTIenableAA){
-  
- }
- if (MINUTIenableOO){
-  
- }
+	//
+	// se abilitata la funzione, ogni min
+	// chiede le domande in automatico
+	if (MINUTIenableAA){
+	  INTERIlocali[MESSnum]=MASTRa; 
+	  tx();
+	}
+	if (MINUTIenableOO){
+	  INTERIlocali[MESSnum]=MASTRo; 
+	  tx();
+	}
+	//
 	//END   ogni minuto
 	secondi=0;
 	minuti++;
@@ -236,125 +266,128 @@ void loop(){
       vw_rx_stop();
       decodeMessage();
       ritrasmette();
-      switch (INTERIlocali[MESSnum]){
-      case CANTIokA:
-	break;
-      case CANTIokB:
-	break;
-      case CANTIokC:
-	break;	
-      case CANTIa:
+      if (DISPLAYenable){
+	switch (INTERIlocali[MESSnum])
+	  {
+	  case CANTIokA:
+	    break;
+	  case CANTIokB:
+	    break;
+	  case CANTIokC:
+	    break;    
+	  case CANTIa:
 /*--------------------------------
 *** CANTIa
 */
-	////////////////////////////////
-	// --------------------
-	//                     
-	// 1000 100 20 600 
-	// ^  13  _  10       
-	// L 1001   T 2129 x     <<<<<<<
-	// --------------------
-	////////////////////////////////
-	/*
-	  sprintf(buf, "%4d",INTERIlocali[DATOb]);
-	  CARATTERI  = char(SIMBluce)  + " " + buf + "   ";
-	  sprintf(buf, "%4d",INTERIlocali[DATOa]);  
-	  CARATTERI += char(SIMBtermo)) + " " + buf;	
-	*/
-	//char tt=SIMBluce;
-	CARATTERI=char(SIMBtermo);
-	sprintf(buf, "%4d",INTERIlocali[DATOb]);
-	CARATTERI+=String(buf);
-	CARATTERI+=char(SIMBluce);
-	sprintf(buf, "%4d",INTERIlocali[DATOa]);
-	CARATTERI+=String(buf);
-	if (INTERIlocali[DATOc]>0){
-	  CARATTERI += char(SIMBon); 
-	} else {
-	  CARATTERI += char(SIMBoff);     
-	}  
+	    ////////////////////////////////
+	    // --------------------
+	    //                     
+	    // 1000 100 20 600 
+	    // ^  13  _  10       
+	    // L 1001   T 2129 x     <<<<<<<
+	    // --------------------
+	    ////////////////////////////////
+	    /*
+	      sprintf(buf, "%4d",INTERIlocali[DATOb]);
+	      CARATTERI  = char(SIMBluce)  + " " + buf + "   ";
+	      sprintf(buf, "%4d",INTERIlocali[DATOa]);  
+	      CARATTERI += char(SIMBtermo)) + " " + buf;    
+	    */
+	    //char tt=SIMBluce;
+	    CARATTERI=char(SIMBtermo);
+	    sprintf(buf, "%4d",INTERIlocali[DATOb]);
+	    CARATTERI+=String(buf);
+	    CARATTERI+=char(SIMBluce);
+	    sprintf(buf, "%4d",INTERIlocali[DATOa]);
+	    CARATTERI+=String(buf);
+	    if (INTERIlocali[DATOc]>0){
+	      CARATTERI += char(SIMBon); 
+	    } else {
+	      CARATTERI += char(SIMBoff);     
+	    }  
 
-	//CARATTERI+="a";
-	//Serial.println(CARATTERI);
-	txDISPLAY(0,3);
-	break;
-      case CANTIb:
+	    //CARATTERI+="a";
+	    //Serial.println(CARATTERI);
+	    txDISPLAY(0,3);
+	    break;
+	  case CANTIb:
 /*--------------------------------
 *** CANTIb
 */
-	// --------------------
-	//                     
-	// XXXX 100 20 600    <<<<<<<
-	// ^  13  _  10              
-	// L 1001   T2129
-	// --------------------
-	////////////////////////////////
-	sprintf(buf, "%3d",INTERIlocali[DATOa]);
-	CARATTERI   = String(buf) + " ";
-	sprintf(buf, "%2d",INTERIlocali[DATOb]);
-	CARATTERI  += String(buf) + " ";
-	sprintf(buf, "%3d",INTERIlocali[DATOc]);
-	CARATTERI  += buf;
-	txDISPLAY(5,1);
-	break;
-      case CANTIc:
+	    // --------------------
+	    //                     
+	    // XXXX 100 20 600    <<<<<<<
+	    // ^  13  _  10              
+	    // L 1001   T2129
+	    // --------------------
+	    ////////////////////////////////
+	    sprintf(buf, "%3d",INTERIlocali[DATOa]);
+	    CARATTERI   = String(buf) + " ";
+	    sprintf(buf, "%2d",INTERIlocali[DATOb]);
+	    CARATTERI  += String(buf) + " ";
+	    sprintf(buf, "%3d",INTERIlocali[DATOc]);
+	    CARATTERI  += buf;
+	    txDISPLAY(5,1);
+	    break;
+	  case CANTIc:
 /*--------------------------------
 *** CANTIc
 */
-	/////agc delay//////////////////
-	// --------------------
-	//                     
-	// 1000 XXX XX XXX     <<<<     
-	// ^  13  _  10       
-	// L 1001   T2129
-	// --------------------
-	////////////////////////////////
-	sprintf(buf, "%4d",INTERIlocali[DATOa]);
-	CARATTERI  = buf;
-	txDISPLAY(0,1);
-	break;
-      case CANTId:
+	    /////agc delay//////////////////
+	    // --------------------
+	    //                     
+	    // 1000 XXX XX XXX     <<<<     
+	    // ^  13  _  10       
+	    // L 1001   T2129
+	    // --------------------
+	    ////////////////////////////////
+	    sprintf(buf, "%4d",INTERIlocali[DATOa]);
+	    CARATTERI  = buf;
+	    txDISPLAY(0,1);
+	    break;
+	  case CANTId:
 /*--------------------------------
 *** CANTId
 */
-	////stato tempo di luce e temp//
-	// --------------------
-	//                     
-	// 1000 100 20 600 
-	// ^  13  _  10       <<<<<<<
-	// L 1001   T2129
-	// --------------------
-	////////////////////////////////
-	byte stTemp;
-	byte stLuce;
-	INTtoBYTE(INTERIlocali[DATOa],stTemp,stLuce);
-	//
-	sprintf(buf, "%4d",INTERIlocali[DATOb]);  
-	switch(stTemp){
-	case SALITA:
-	  CARATTERI  = char(SIMBsu);
-	  break;
-	case DISCESA:
-	  CARATTERI  = char(SIMBgiu); 
-	  break;
-	}
-	CARATTERI += String(buf) + "   ";
-	//
-	sprintf(buf, "%4d",INTERIlocali[DATOc]);  
-	switch(stLuce){
-	case LUCEpoca:
-	  CARATTERI += String(char(SIMBlivA));
-	  break;
-	case LUCEmedia:
-	  CARATTERI+= char(SIMBlivD);	  
-	  break;
-	case LUCEtanta:
-	  CARATTERI+= char(SIMBlivF);	  
-	  break;	  
-	}
-	CARATTERI += buf;
-	txDISPLAY(0,2);
-	break;
+	    ////stato tempo di luce e temp//
+	    // --------------------
+	    //                     
+	    // 1000 100 20 600 
+	    // ^  13  _  10       <<<<<<<
+	    // L 1001   T2129
+	    // --------------------
+	    ////////////////////////////////
+	    byte stTemp;
+	    byte stLuce;
+	    INTtoBYTE(INTERIlocali[DATOa],stTemp,stLuce);
+	    //
+	    sprintf(buf, "%4d",INTERIlocali[DATOb]);  
+	    switch(stTemp){
+	    case SALITA:
+	      CARATTERI  = char(SIMBsu);
+	      break;
+	    case DISCESA:
+	      CARATTERI  = char(SIMBgiu); 
+	      break;
+	    }
+	    CARATTERI += String(buf) + "   ";
+	    //
+	    sprintf(buf, "%4d",INTERIlocali[DATOc]);  
+	    switch(stLuce){
+	    case LUCEpoca:
+	      CARATTERI += String(char(SIMBlivA));
+	      break;
+	    case LUCEmedia:
+	      CARATTERI+= char(SIMBlivD);      
+	      break;
+	    case LUCEtanta:
+	      CARATTERI+= char(SIMBlivF);      
+	      break;      
+	    }
+	    CARATTERI += buf;
+	    txDISPLAY(0,2);
+	    break;
+	  }
       }
       //
       vw_rx_start();
@@ -376,56 +409,12 @@ void ritrasmette(){
   int dc =INTERIlocali[DATOc];
   int mm = ss+10000;
   INTERIlocali[MESSnum]=mm;
-  encodeMessage();
-  vw_rx_stop();
-  vw_send((uint8_t *)BYTEradio,BYTEStoTX);
-  vw_wait_tx();
-  vw_rx_start();
+  tx();
   INTERIlocali[MESSnum]=ss;
   INTERIlocali[DATOa]=da;
   INTERIlocali[DATOb]=db;
   INTERIlocali[DATOc]=dc;
   delay(100);
-}
-/*--------------------------------
-* decodeMessage()
-*/
-// RADIO -> locale
-//
-void decodeMessage(){
-  byte m=0;
-  cipher();
-  for (int n=0; n<4;n++){
-    INTERIlocali[n]=BYTEradio[m+1];
-    INTERIlocali[n]=INTERIlocali[n] << 8;
-    INTERIlocali[n]=INTERIlocali[n]+BYTEradio[m];
-    m+=2;
-  }
-}
-/*--------------------------------
-* encodeMessage()
-*/
-// locale -> RADIO
-//
-void encodeMessage(){
-  byte m=0;
-  for (int n=0; n<4;n++){
-    BYTEradio[m]=INTERIlocali[n] & mask;
-    INTERIlocali[n]=INTERIlocali[n] >> 8;
-    BYTEradio[m+1]=INTERIlocali[n] & mask;
-    m+=2;
-  }
-  cipher();
-}
-/*--------------------------------
-* cipher()
-*/
-// cifratura XOR del messaggio
-//
-void cipher(){
-  for (byte n=0;n<8;n++){
-    BYTEradio[n]=BYTEradio[n]^CIFR[n];
-  }
 }
 /*--------------------------------
 * ir_decode()
@@ -449,33 +438,41 @@ void chechForIR(){
     switch (key){
     case KEY_OK:
       switch (MESSnum){
-        case MASTRaa:
-        MINUTIenableAA=true;
-        break;
-        case MASTRab:
-        MINUTIenableAA=false;
-        break;
-        case MASTRoo:
-        MINUTIenableOO=true;
-        break;
-        case MASTRop:
-        MINUTIenableOO=false;
-        break;
-        default:
-        ////////////////////////////////
-        // invia il numero composto
-        ////////////////////////////////
-        stampaNc();
-        INTERIlocali[MESSnum]=NUMcomp;
-        INTERIlocali[DATOa]=0;
-        INTERIlocali[DATOb]=0;
-        INTERIlocali[DATOc]=0;
-        encodeMessage();
-        vw_rx_stop();
-        vw_send((uint8_t *)BYTEradio,BYTEStoTX);
-        vw_wait_tx();
-        vw_rx_start();
-        break;
+      case MASTRaa:
+	MINUTIenableAA=true;
+	EEPROMsaveRipeti();
+	break;
+      case MASTRab:
+	MINUTIenableAA=false;
+	EEPROMsaveRipeti();	
+	break;
+      case MASTRoo:
+	MINUTIenableOO=true;
+	EEPROMsaveRipeti();	
+	break;
+      case MASTRop:
+	MINUTIenableOO=false;
+	EEPROMsaveRipeti();	
+	break;
+      case MASTRdon:
+	DISPLAYIenable=true;
+	EEPROM.write(EEPdisplay,DISPLAYenable);
+	break;
+      case MASTRdof:
+	DISPLAYIenable=false;
+	EEPROM.write(EEPdisplay,DISPLAYenable);
+	break;
+      default:
+	////////////////////////////////
+	// invia il numero composto da IR
+	////////////////////////////////
+	stampaNc();
+	INTERIlocali[MESSnum]=NUMcomp;
+	INTERIlocali[DATOa]=0;
+	INTERIlocali[DATOb]=0;
+	INTERIlocali[DATOc]=0;
+	tx();
+	break;
       }
       break;
     case KEY_1: scorriNumero(1);break;
@@ -580,4 +577,79 @@ void INTtoBYTE(int x, byte& lsb, byte& msb){
   lsb =x & 0x00FF;
   x = x >> 8;
   msb = x & 0x00FF;
+}
+/*--------------------------------
+* EEPROMsaveRipeti()
+*/
+// salvataggio informazione di ripetizione
+// (domande automatiche) ogni min
+//
+void EEPROMsaveRipeti(){
+  byte n=MINUTIenableOO;
+  n = n<<1;
+  n=n || MINUTIenableAA;
+  EEPROM.write(EEPripeti,n);
+}
+/*--------------------------------
+* EEPROMloadRipeti()
+*/
+//
+void EEPROMloadRipeti(){
+  byte n=EEPROM.read(EEPripeti);
+  n=n & 1;
+  MINUTIenableAA=n;
+  n=EEPROM.read(EEPripeti);
+  n=n>>1;
+  n=n & 1;
+  MINUTIenableOO=n;
+}
+/*--------------------------------
+* decodeMessage()
+*/
+// RADIO -> locale
+//
+void decodeMessage(){
+  byte m=0;
+  cipher();
+  for (int n=0; n<4;n++){
+    INTERIlocali[n]=BYTEradio[m+1];
+    INTERIlocali[n]=INTERIlocali[n] << 8;
+    INTERIlocali[n]=INTERIlocali[n]+BYTEradio[m];
+    m+=2;
+  }
+}
+/*--------------------------------
+* encodeMessage()
+*/
+// locale -> RADIO
+//
+void encodeMessage(){
+  byte m=0;
+  for (int n=0; n<4;n++){
+    BYTEradio[m]=INTERIlocali[n] & mask;
+    INTERIlocali[n]=INTERIlocali[n] >> 8;
+    BYTEradio[m+1]=INTERIlocali[n] & mask;
+    m+=2;
+  }
+  cipher();
+}
+/*--------------------------------
+* cipher()
+*/
+// cifratura XOR del messaggio
+//
+void cipher(){
+  for (byte n=0;n<8;n++){
+    BYTEradio[n]=BYTEradio[n]^CIFR[n];
+  }
+}
+/*--------------------------------
+* tx()
+*/
+void tx(){
+  encodeMessage();
+  vw_rx_stop();
+  vw_send((uint8_t *)BYTEradio,BYTEStoTX);
+  vw_wait_tx();
+  vw_rx_start(); 
 }
