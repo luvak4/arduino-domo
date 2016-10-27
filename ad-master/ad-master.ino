@@ -1,4 +1,5 @@
 // -*-c++-*-
+// verificare che agc delay serva oppure no
 // quando non si ottiene risposta entro determinato tempo
 // segnalare inviando byte conformato in un certo modo
 // *impostare la lettura automatica ogni minuto
@@ -32,6 +33,7 @@ radio rx --->| 11     12 |---> radio tx
 */////////////////////////////////
 #include <IRremote.h> 
 #include <VirtualWire.h>
+#include <EEPROM.h>
 /*--------------------------------
 ** pins
 */
@@ -120,9 +122,6 @@ byte CIFR[]={223,205,228,240,43,146,241,//
          70,34,74,224,27,111,150,22,//
          138,239,200,179,222,231,212};
 #define mask 0x00FF
-int     INTERIlocali[4]={0,0,0,0}; // N.Mess,Da,Db,Dc
-byte    BYTEradio[BYTEStoTX];
-uint8_t buflen = BYTEStoTX; //for rx
 #define VELOCITAstd   500   // velocita standard
 #define MESSnum         0   // posizione in BYTEradio
 #define DATOa           1   //  "
@@ -130,6 +129,9 @@ uint8_t buflen = BYTEStoTX; //for rx
 #define DATOc           3   //  "
 #define BYTEStoTX       8   // numbero of bytes to tx
 #define AGCdelay 1000       // delay for AGC
+int     INTERIlocali[4]={0,0,0,0}; // N.Mess,Da,Db,Dc
+byte    BYTEradio[BYTEStoTX];
+uint8_t buflen = BYTEStoTX; //for rx
 /*--------------------------------
 ** LCM
 */
@@ -196,11 +198,11 @@ byte secondi;
 byte minuti;
 bool MINUTIenableAA=false;
 bool MINUTIenableOO=false;
-bool DISPLAYIenable=true;
+bool DISPLAYenable=true;
 
 // EEPROM
-#define EEPripeti 0;
-#define EEPdisplay 1;
+#define EEPripeti 0
+#define EEPdisplay 1
 /*////////////////////////////////
 * setup
 */
@@ -455,11 +457,11 @@ void chechForIR(){
 	EEPROMsaveRipeti();	
 	break;
       case MASTRdon:
-	DISPLAYIenable=true;
+	DISPLAYenable=true;
 	EEPROM.write(EEPdisplay,DISPLAYenable);
 	break;
       case MASTRdof:
-	DISPLAYIenable=false;
+	DISPLAYenable=false;
 	EEPROM.write(EEPdisplay,DISPLAYenable);
 	break;
       default:
