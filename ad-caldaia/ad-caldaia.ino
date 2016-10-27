@@ -1,3 +1,4 @@
+// -*-c++-*-
 /////////////////////////
 // CALDAIA
 /////////////////////////
@@ -6,63 +7,71 @@
 // in cui sono rimasti accesi singolarmente. Ogni 24 ore vengono
 // resettati i contatori. Le informazioni sullo stato vengono rese
 // disponibili via radio
-
+/*--------------------------------
+* configurazioni
+*/
 #include <VirtualWire.h>
-
+/*--------------------------------
+** pins
+*/
 #define pin_photoA    A0
 #define pin_photoB    A1
 #define pin_photoC    A2
 #define pin_photoD    A3
 #define pin_rx    11
 #define pin_tx    12
-
-// domande (IN)
+/*--------------------------------
+** domande (IN)
+*/
 #define MASTCa 150 // leggi tempo led A/B/C
 #define MASTCb 151 // leggi tempo led D
 #define MASTCc 152 // get stato leds
-// risposte (OUT)
+/*--------------------------------
+** risposte (OUT)
+*/
 #define CALDAa   1010 // get tempo led A/B/C
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
-
-#define AGCdelay 1000
+/*--------------------------------
+** radio tx rx
+*/
+byte CIFR[]={223,205,228,240,43,146,241,//
+         87,213,48,235,131,6,81,26,//
+         70,34,74,224,27,111,150,22,//
+         138,239,200,179,222,231,212};
+#define mask 0x00FF
+int     INTERIlocali[4]={0,0,0,0}; // N.Mess,Da,Db,Dc
+byte    BYTEradio[BYTEStoTX];
+uint8_t buflen = BYTEStoTX; //for rx
+#define VELOCITAstd   500   // velocita standard
+#define MESSnum         0   // posizione in BYTEradio
+#define DATOa           1   //  "
+#define DATOb           2   //  "
+#define DATOc           3   //  "
+#define BYTEStoTX       8   // numbero of bytes to tx
+#define AGCdelay 1000       // delay for AGC
+/*--------------------------------
+** varie
+*/
 #define SOGLIA   400
-
+//
 byte secondi;
 byte SecPhotoA=0;
 byte SecPhotoB=0;
 byte SecPhotoC=0;
 byte SecPhotoD=0;
-
+//
 unsigned int minuti;
 unsigned int MinPhotoA=0;
 unsigned int MinPhotoB=0;
 unsigned int MinPhotoC=0;
 unsigned int MinPhotoD=0;
-
+//
 unsigned long tempo;
-
-/*--------------------------------
-** comunicazione radio principale
+//
+/*////////////////////////////////
+* setup()
 */
-#define VELOCITAstd   500
-#define MESSnum         0
-#define DATOa           1
-#define DATOb           2
-#define DATOc           3
-#define BYTEStoTX       8
-int     INTERIlocali[4]={0,0,0,0};
-byte    BYTEradio[BYTEStoTX];
-uint8_t buflen = BYTEStoTX; //for rx
-/*--------------------------------
-** varie
-*/
-byte CIFR[]={223,205,228,240,43,146,241,//
-	     87,213,48,235,131,6,81,26,//
-	     70,34,74,224,27,111,150,22,//
-	     138,239,200,179,222,231,212};
-#define mask 0x00FF
-
 void setup() {
   vw_set_tx_pin(pin_tx);
   vw_set_rx_pin(pin_rx);
@@ -71,9 +80,14 @@ void setup() {
   tempo=millis();
   Serial.begin(9600); // debug
 }
-
+//
+/*////////////////////////////////
+* loop()
+*/
 void loop(){
-  // tieni il tempo
+/*--------------------------------
+** tieni il tempo
+*/
   if ((abs(millis()-tempo))>1000){
     tempo=millis();
     secondi+=1;
@@ -117,7 +131,9 @@ void loop(){
       }
     }    
   }
-  // radio rx
+/*--------------------------------
+** radio rx
+*/
   if (vw_get_message(BYTEradio, &buflen)){
     vw_rx_stop();
     decodeMessage();
@@ -145,7 +161,11 @@ void loop(){
     }
   }  
 }
-
+/*--------------------------------
+* decodeMessage()
+*/
+// RADIO -> locale
+//
 void decodeMessage(){
   byte m=0;
   cipher();
@@ -156,13 +176,34 @@ void decodeMessage(){
     m+=2;
   }
 }
-
+/*--------------------------------
+* encodeMessage()
+*/
+// locale -> RADIO
+//
+void encodeMessage(){
+  byte m=0;
+  for (byte n=0; n<4;n++){
+    BYTEradio[m]=INTERIlocali[n] & mask;
+    INTERIlocali[n]=INTERIlocali[n] >> 8;
+    BYTEradio[m+1]=INTERIlocali[n] & mask;
+    m+=2;
+  }
+  cipher();
+}
+/*--------------------------------
+* cipher()
+*/
+// cifratura XOR del messaggio
+//
 void cipher(){
   for (byte n=0;n<8;n++){
     BYTEradio[n]=BYTEradio[n]^CIFR[n];
   }
 }
-
+/*--------------------------------
+* tx()
+*/
 void tx(){
   // codifica in bytes
   encodeMessage();
@@ -177,15 +218,4 @@ void tx(){
   vw_send((uint8_t *)BYTEradio,BYTEStoTX);
   vw_wait_tx();
   vw_rx_start();
-}
-
-void encodeMessage(){
-  byte m=0;
-  for (byte n=0; n<4;n++){
-    BYTEradio[m]=INTERIlocali[n] & mask;
-    INTERIlocali[n]=INTERIlocali[n] >> 8;
-    BYTEradio[m+1]=INTERIlocali[n] & mask;
-    m+=2;
-  }
-  cipher();
 }
