@@ -1,11 +1,12 @@
+///* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil;  c-file-style: "k&r"; c-basic-offset: 0; -*-
 /////////////////////////////
 // timer per ventilatore a pale a soffitto
 ///////////////////////////
 
-// Attraverso un pulsante "a peretta" è possibile impostare il tempo
+// Attraverso un pulsante e' possibile impostare il tempo
 // di accensione di un ventilatore (per due/quattro/sei/otto ore). Il tempo
 // impostato e lo stato di avanzamento del tempo
-// è visualizzato da 4 led
+// e' visualizzato da 4 led
 
 //bool DEBUG =true;
 const int inPulsante = 7;
@@ -46,27 +47,27 @@ int segno;
 //================================
 void setup() {
   pinMode(inPulsante,INPUT);
-  //
+//
   pinMode(LED1,OUTPUT);
   digitalWrite(LED1,LOW);
-  //
+//
   pinMode(LED2,OUTPUT);
   digitalWrite(LED2,LOW);
-  //
+//
   pinMode(LED3,OUTPUT);
   digitalWrite(LED3,LOW);
-  //
+//
   pinMode(LED4,OUTPUT);
   digitalWrite(LED4,LOW);
-  //
+//
   pinMode(RELE,OUTPUT);
   digitalWrite(RELE,LOW);
-  // solo per test
-  // Serial.begin(115200);
-  // 
-  // LAMPEGGIO DEL PIN 13
-  // poi lo spengo 
-  //
+// solo per test
+// Serial.begin(115200);
+// 
+// LAMPEGGIO DEL PIN 13
+// poi lo spengo 
+//
   pinMode(13,OUTPUT);
   digitalWrite(13,LOW);
   delay(500);
@@ -84,7 +85,7 @@ void loop() {
   int DIFFb;
   int Xa;
   int Xb;
-  //
+//
   dutyCycle += 1;
   if (dutyCycle > 9){
     dutyCycle = 0;
@@ -96,10 +97,10 @@ void loop() {
       Xa = DIFFa - 25;
       if (Xa >= 0){
         Pa = Qa;
-        //--------------------------------
-        // da qui passa ogni 0.025 Sec
-	      // quarto di decimo di secondo
-        //--------------------------------
+//--------------------------------
+// da qui passa ogni 0.025 Sec
+// quarto di decimo di secondo
+//--------------------------------
         if (digitalRead(inPulsante)){
           chkPremuto();
         } else {
@@ -116,9 +117,9 @@ void loop() {
       Xb = DIFFb - 1000;
       if (Xb >= 0){
         Pb = Qb - Xb;
-        //--------------------------------
-        // da qui passa ogni secondo
-        //--------------------------------
+//--------------------------------
+// da qui passa ogni secondo
+//--------------------------------
         chkTempo();
         setLEDs();
       }
@@ -128,26 +129,26 @@ void loop() {
   }
 }
 void chkTempo(){
-  //================================
-  // se il conteggio e attivo
-  // imposta le ore programmate
-  // e lo stato del rele
-  // sulla base del tempoAlloSpegnimento
-  //================================
+//================================
+// se il conteggio e attivo
+// imposta le ore programmate
+// e lo stato del rele
+// sulla base del tempoAlloSpegnimento
+//================================
   if (conteggioAttivo){
     tempoAspegne -= 1;
     if (tempoAspegne == 0){
       oreProgrammate = 0;
       digitalWrite(RELE,LOW);
-      //--------------------------------
-      // spegne il conteggio del
-      // tempoAlloSpegnimento
-      //--------------------------------
+//--------------------------------
+// spegne il conteggio del
+// tempoAlloSpegnimento
+//--------------------------------
       conteggioAttivo = false;
     } else {
       if (tempoAspegne > stepOraD){
-        // non dovrebbe mai verificarsi
-	tempoAspegne = stepOraD - 1;
+// non dovrebbe mai verificarsi
+        tempoAspegne = stepOraD - 1;
       } else {
         if (tempoAspegne > stepOraC){
           oreProgrammate = 4;
@@ -194,15 +195,15 @@ void setLEDs(){
         digitalWrite(LED4,LOW);
       } else {
         if (oreProgrammate == 3){
-            digitalWrite(LED1,HIGH);
-            digitalWrite(LED2,HIGH);
-            digitalWrite(LED3,HIGH);
-            digitalWrite(LED4,LOW);
+          digitalWrite(LED1,HIGH);
+          digitalWrite(LED2,HIGH);
+          digitalWrite(LED3,HIGH);
+          digitalWrite(LED4,LOW);
         } else {
-	    digitalWrite(LED1,HIGH);
-            digitalWrite(LED2,HIGH);
-            digitalWrite(LED3,HIGH);
-            digitalWrite(LED4,HIGH);
+          digitalWrite(LED1,HIGH);
+          digitalWrite(LED2,HIGH);
+          digitalWrite(LED3,HIGH);
+          digitalWrite(LED4,HIGH);
         }        
       }      
     }
@@ -220,39 +221,39 @@ void chkRilasciato(){
     if (contaRilasciato > tempoLungo){
       if (giaPassato != 4){
         giaPassato = 4;
-        // funzione D
-       }
+// funzione D
+      }
     } else {
       if (contaRilasciato > tempoLinea){
         if (giaPassato != 3){
-	  giaPassato = 3;	
-          // funzione C
-	  //--------------------------------
-	  // attiva il conteggio del
-	  // tempoAlloSpegnimento
-	  //--------------------------------
-	  if (oreProgrammate > 0){
-	    conteggioAttivo = true;
-	  }
+          giaPassato = 3;	
+// funzione C
+//--------------------------------
+// attiva il conteggio del
+// tempoAlloSpegnimento
+//--------------------------------
+          if (oreProgrammate > 0){
+            conteggioAttivo = true;
+          }
         }
       } else {
         if (contaRilasciato > tempoPunto){
           if (giaPassato != 2){
-	    giaPassato = 2;	
-            // funzione B
+            giaPassato = 2;	
+// funzione B
           }
         } else {
           if (contaRilasciato > tempoDisturbo){
             if (giaPassato != 1){
-	      giaPassato = 1;	
-              // funzione A
+              giaPassato = 1;	
+// funzione A
               programmaLeOre();
               impostaTempo();
             }
           } else {
-	    if (giaPassato != 0){
-	      giaPassato = 0;
-	    }
+            if (giaPassato != 0){
+              giaPassato = 0;
+            }
           }          
         }        
       }      
@@ -271,26 +272,26 @@ void chkPremuto(){
     if (contaPremuto > tempoLungo){
       if (segno != 4){
         segno = 4;
-       }
+      }
     } else {
       if (contaPremuto > tempoLinea){
         if (segno != 3){
-	  segno = 3;	
+          segno = 3;	
         }
       } else {
         if (contaPremuto > tempoPunto){
           if (segno != 2){
-	    segno = 2;	
+            segno = 2;	
           }
         } else {
           if (contaPremuto > tempoDisturbo){
             if (segno != 1){
-	      segno = 1;	
+              segno = 1;	
             }
           } else {
-	    if (segno != 0){
-	      segno = 0;
-	    }
+            if (segno != 0){
+              segno = 0;
+            }
           }          
         }        
       }      
@@ -302,22 +303,22 @@ void chkPremuto(){
 //================================
 void programmaLeOre(){
   if (segno == 1){
-    //--------------------------------
-    // tempo corto (punto)
-    //--------------------------------
+//--------------------------------
+// tempo corto (punto)
+//--------------------------------
     oreProgrammate += 1;
     if (oreProgrammate > 4){
       oreProgrammate = 0;
     }
   } else {
     if (segno > 1 ){
-      //--------------------------------
-      // tempi piu lunghi (linea o tempo lungo)
-      //--------------------------------
+//--------------------------------
+// tempi piu lunghi (linea o tempo lungo)
+//--------------------------------
       if (oreProgrammate > 0){
-	oreProgrammate = 0;  // spegne se acceso
+        oreProgrammate = 0;  // spegne se acceso
       } else {
-	oreProgrammate = 3; // accende se spento
+        oreProgrammate = 3; // accende se spento
       }
     }
   }
@@ -327,20 +328,20 @@ void programmaLeOre(){
 //================================
 void impostaTempo(){
   switch (oreProgrammate){
-    case 0:
-      tempoAspegne = 1; // fine
-      break;
-    case 1:
-      tempoAspegne = stepOraA;
-      break;
-    case 2:
-      tempoAspegne = stepOraB;
-      break;
-    case 3:
-      tempoAspegne = stepOraC;
-      break;
-    case 4:
-      tempoAspegne = stepOraD;
-      break;
+  case 0:
+    tempoAspegne = 1; // fine
+    break;
+  case 1:
+    tempoAspegne = stepOraA;
+    break;
+  case 2:
+    tempoAspegne = stepOraB;
+    break;
+  case 3:
+    tempoAspegne = stepOraC;
+    break;
+  case 4:
+    tempoAspegne = stepOraD;
+    break;
   }
 }
