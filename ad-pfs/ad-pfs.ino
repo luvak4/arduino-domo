@@ -21,25 +21,26 @@ const int pin_giallo = 3;
 const int pin_verde = 4;
 const int pin_rx = 11;
 const int pin_tx = 12;
+const int pin_pushbuttonOFF = 5;
 /*--------------------------------
 ** stati
 */
-#define ST_FIRSTBOOT    1
-#define ST_BOOTING      2
-#define ST_OFF_A      3
-#define ST_OFF_B      4
-#define ST_OFF_C      5
-#define ST_OFF_D      6
-#define ST_DOREBOOT_A   7
-#define ST_DOREBOOT_B   8
-#define ST_DOREBOOT_C   9
-#define ST_DOREBOOT_D   10
-#define ST_ON           11
-#define ST_OFF          12
+#define ST_FIRSTBOOT   1
+#define ST_BOOTING     2
+#define ST_OFF_A       3
+#define ST_OFF_B       4
+#define ST_OFF_C       5
+#define ST_OFF_D       6
+#define ST_DOREBOOT_A  7
+#define ST_DOREBOOT_B  8
+#define ST_DOREBOOT_C  9
+#define ST_DOREBOOT_D 10
+#define ST_ON         11
+#define ST_OFF        12
 //
-#define LUCEGIALLA      1
-#define LUCEVERDE       2
-#define LUCEROSSA       3
+#define LUCEGIALLA     1
+#define LUCEVERDE      2
+#define LUCEROSSA      3
 //
 /*--------------------------------
 ** domande (IN)
@@ -50,17 +51,17 @@ const int pin_tx = 12;
 /*--------------------------------
 ** risposte (OUT)
 */
-#define PFSENa   1016 // get status of leds
-#define PFSENb   1017 // ok shutdown
-#define PFSENc   1018 // ok reboot
-#define PFSENc   1019 // operation not possible
+#define PFSENa 1016 // get status of leds
+#define PFSENb 1017 // ok shutdown
+#define PFSENc 1018 // ok reboot
+#define PFSENc 1019 // operation not possible
 /*--------------------------------
 ** radio tx rx
 */
-byte CIFR[]={223,205,228,240,43,146,241,//
-         87,213,48,235,131,6,81,26,//
-         70,34,74,224,27,111,150,22,//
-         138,239,200,179,222,231,212};
+byte CIFR[]={223,205,228,240,43,146,241,/
+	     87,213,48,235,131,6,81,26,/
+	     70,34,74,224,27,111,150,22,/
+	     138,239,200,179,222,231,212};
 #define mask        0x00FF
 #define VELOCITAstd   500   // velocita standard
 #define MESSnum         0   // posizione in BYTEradio
@@ -88,6 +89,7 @@ void setup() {
   pinMode(pin_rosso, OUTPUT);  // led red
   pinMode(pin_giallo, OUTPUT); // led yellow
   pinMode(pin_verde, OUTPUT);  // led green
+  pinMode(pin_pushbuttonOFF, INPUT); // pulsante spegnimento
   //
   vw_set_tx_pin(pin_tx); 
   vw_set_rx_pin(pin_rx);  
@@ -99,9 +101,9 @@ void setup() {
 * loop()
 */
 void loop() {
-  /*--------------------------------
-  ** radio rx
-  */
+/*--------------------------------
+** radio rx
+*/
   if (vw_get_message(BYTEradio, &buflen)){
     vw_rx_stop();
     decodeMessage();
@@ -120,80 +122,107 @@ void loop() {
       break;
     }    
   }
-  /*--------------------------------
-  ** internal steps
-  */
+/*--------------------------------
+** internal steps
+*/
   //ogni secondo
   if (abs(millis()-tempo>1000)){
     tempo=millis();
-  switch (intlStep){
-  case ST_FIRSTBOOT:
-     if (Serial.available()) {
-     if (Serial.find("PC Engines ALIX")){
-      intlStep=ST_BOOTING;
-      txStat(LUCEGIALLA);
+    switch (intlStep){
+    case ST_FIRSTBOOT:
+      if (Serial.available()) {
+	if (Serial.find("PC Engines ALIX")){
+	  intlStep=ST_BOOTING;
+	  txStat(LUCEGIALLA);
+	}
+      }
+      break;
+    case ST_BOOTING:
+      if (Serial.available()) {
+	if (Serial.find("Enter an option")){
+	  intlStep=ST_ON;
+	  txStat(LUCEVERDE);
+	}
+      }
+      break;
+    case ST_ON:
+      // *** sistema acceso ***
+      //
+      // spegne il sistema manualmente
+      // attraverso il pulsante
+      if (digitalRead(pin_pushbuttonOFF)){
+	intlStep=ST_OFF_A;
+      }
+      // rilevazione di sistema in
+      // spegnimento eseguita probabilmente via web
+      if (Serial.available()) {
+	if (Serial.find("has halted")){
+	  intlStep=ST_FIRSTBOOT;
+	  txStat(LUCEROSSA);
+	}
+      }
+      // rilevazione di sistema in
+      // riavvio eseguita probabilmente via web      
+      if (Serial.available()) {
+	if (Serial.find("rebooting")){
+	  intlStep=ST_FIRSTBOOT;
+	  txStat(LUCEROSSA);
+	}
+      }      
+      break;
+    case ST_OFF_A:
+      // procedura di spegnimento del sistema
+      Serial.write("6\n");
+      intlStep=ST_OFF_B;
+      break;
+    case ST_OFF_B:
+      if (Serial.available()) {
+	if (Serial.find("proceed")){
+	  intlStep=ST_OFF_C;
+	  txStat(LUCEGIALLA);
+	}
+      }
+      break;
+    case ST_OFF_C:
+      Serial.write("y\n");
+      intlStep=ST_OFF_D;
+      break;    
+    case ST_OFF_D:
+      // il sistema e' spento 
+      if (Serial.available()) {
+	if (Serial.find("has halted")){
+	  intlStep=ST_FIRSTBOOT;
+	  txStat(LUCEROSSA);
+	}
+      }
+      break;
+      // inizio procedura di riavvio
+    case ST_DOREBOOT_A:
+      Serial.write("5\n");
+      intlStep=ST_DOREBOOT_B;
+      break;
+    case ST_DOREBOOT_B:
+      if (Serial.available()) {
+	if (Serial.find("proceed")){
+	  intlStep=ST_DOREBOOT_C;
+	  txStat(LUCEGIALLA);
+	}
+      }
+      break;
+    case ST_DOREBOOT_C:
+      Serial.write("y\n");
+      intlStep=ST_DOREBOOT_D;
+      break;
+    case ST_DOREBOOT_D:
+      // il sistema si sta riavviando
+      if (Serial.available()) {
+	if (Serial.find("rebooting")){
+	  intlStep=ST_FIRSTBOOT;
+	  txStat(LUCEROSSA);
+	}
+      }
+      break; 
     }
-     }
-    break;
-  case ST_BOOTING:
-    if (Serial.available()) {
-     if (Serial.find("Enter an option")){
-      intlStep=ST_ON;
-      txStat(LUCEVERDE);
-    }
-    }
-    break;
-  //--- halt
- case ST_OFF_A:
-   Serial.write("6\n");
-   intlStep=ST_OFF_B;
-   break;
- case ST_OFF_B:
-   if (Serial.available()) {
-     if (Serial.find("proceed")){
-     intlStep=ST_OFF_C;
-     txStat(LUCEGIALLA);
-   }
-   }
-   break;
- case ST_OFF_C:
-   Serial.write("y\n");
-   intlStep=ST_OFF_D;
-   break;    
- case ST_OFF_D:
-   if (Serial.available()) {
-     if (Serial.find("has halted")){
-     intlStep=ST_FIRSTBOOT;
-     txStat(LUCEROSSA);
-   }
-     }
-   break;
-   //-- rebooting
- case ST_DOREBOOT_A:
-   Serial.write("5\n");
-   intlStep=ST_DOREBOOT_B;
-   break;
- case ST_DOREBOOT_B:
-   if (Serial.available()) {
-     if (Serial.find("proceed")){
-     intlStep=ST_DOREBOOT_C;
-     txStat(LUCEGIALLA);
-   }
-     }
-   break;
- case ST_DOREBOOT_C:
-   Serial.write("y\n");
-   intlStep=ST_DOREBOOT_D;
-   break;
- case ST_DOREBOOT_D:
-   if (Serial.available()) {
-     if (Serial.find("rebooting")){
-     intlStep=ST_FIRSTBOOT;
-     txStat(LUCEROSSA);
-     }
-   }
-   break; 
-  }
   }
 }
 /*--------------------------------
