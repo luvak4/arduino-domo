@@ -85,6 +85,7 @@ const int pin_ir  =  2; // ir pin
 #define MASTRop 125 // disable ogni minuto MASTRo
 #define MASTRdon 126 // enable invio a display
 #define MASTRdof 127 // disable invio a display
+#define MASTRclear 130 // clear display
 #define MASTCa 150 // leggi tempo led A/B/C
 #define MASTCb 151 // leggi tempo led D
 #define MASTCc 152 // get stato leds
@@ -182,10 +183,14 @@ String  CARATTERI;
 #define KEY_8    -1395652082
 #define KEY_9      497848941
 #define KEY_0    -1975719008
-#define KEY_UP          9999
-#define KEY_DN          9998
+#define KEY_UP    2113210209
+#define KEY_DN     712987970
 #define KEY_OK   -1812574087
 #define KEY_CLEAR -477592334
+
+
+
+
 IRrecv irrecv(pin_ir); // ir initialize library
 decode_results irX;    // ir variable
 /*--------------------------------
@@ -236,25 +241,27 @@ void loop(){
       decimi=0;
       secondi++;
       if (secondi>59){
-	//BEGIN ogni minuto
-	//
-	// se abilitata la funzione, ogni min
-	// chiede le domande in automatico
-	if (MINUTIenableAA){
-	  INTERIlocali[MESSnum]=MASTRa; 
-	  tx();
-	}
-	if (MINUTIenableOO){
-	  INTERIlocali[MESSnum]=MASTRo; 
-	  tx();
-	}
-	//
-	//END   ogni minuto
-	secondi=0;
-	minuti++;
-	if (minuti>250){
-	  minuti=0;
-	}
+      	//BEGIN ogni minuto
+      	//
+      	// se abilitata la funzione, ogni min
+      	// chiede le domande in automatico
+        /*
+      	if (MINUTIenableAA){
+      	  INTERIlocali[MESSnum]=MASTRa; 
+      	  tx();
+      	}
+      	if (MINUTIenableOO){
+      	  INTERIlocali[MESSnum]=MASTRo; 
+      	  tx();
+      	}
+       */
+      	//
+      	//END   ogni minuto
+      	secondi=0;
+      	minuti++;
+      	if (minuti>250){
+      	  minuti=0;
+      	}
       }
     }
 /*--------------------------------
@@ -271,6 +278,27 @@ void loop(){
       if (DISPLAYenable){
 	switch (INTERIlocali[MESSnum])
 	  {
+    case CALDAa:
+      sprintf(buf, "%4d",INTERIlocali[DATOa]);
+      CARATTERI=String(buf);
+      CARATTERI+=" ";
+      sprintf(buf, "%4d",INTERIlocali[DATOb]);
+      CARATTERI+=String(buf);
+      CARATTERI+=" ";
+     sprintf(buf, "%4d",INTERIlocali[DATOc]);
+      CARATTERI+=String(buf);
+      txDISPLAY(0,1);    
+      break;
+    case CALDAb:
+      sprintf(buf, "%4d",INTERIlocali[DATOa]);
+      CARATTERI=String(buf);
+      txDISPLAY(16,1);    
+      break;
+    case CALDAc:
+     sprintf(buf, "%4d",INTERIlocali[DATOa]);
+      CARATTERI=String(buf);
+      txDISPLAY(0,2);    
+      break;
 	  case CANTIokA:
 	    break;
 	  case CANTIokB:
@@ -405,6 +433,7 @@ void ritrasmette(){
   // ritrasmette i messaggi ricevuti 
   // cambiando id ma mantenendo i dati ricevuti
   // =======
+  /*
   int ss =INTERIlocali[MESSnum];
   int da =INTERIlocali[DATOa];
   int db =INTERIlocali[DATOb];
@@ -417,6 +446,7 @@ void ritrasmette(){
   INTERIlocali[DATOb]=db;
   INTERIlocali[DATOc]=dc;
   delay(100);
+  */
 }
 /*--------------------------------
 * ir_decode()
@@ -425,6 +455,7 @@ void ritrasmette(){
 //
 long ir_decode(decode_results *irX){
   long keyLongNumber = irX->value;
+  //Serial.println(keyLongNumber);
   return keyLongNumber;
 }
 /*--------------------------------
@@ -440,6 +471,14 @@ void chechForIR(){
     switch (key){
     case KEY_OK:
       switch (MESSnum){
+             case MASTRclear:
+             delay(300);
+      CARATTERI = "                    ";
+      txDISPLAY(0,0);     
+      //txDISPLAY(0,1);     
+      //txDISPLAY(0,2);     
+      //txDISPLAY(0,3);      
+      break;
       case MASTRaa:
 	MINUTIenableAA=true;
 	EEPROMsaveRipeti();
@@ -488,8 +527,8 @@ void chechForIR(){
     case KEY_9: scorriNumero(9);break;
     case KEY_0: scorriNumero(0);break;
     case KEY_CLEAR: NUMcomp=0; stampaNc(); break;
-    case KEY_UP: break;
-    case KEY_DN: break;      
+    case KEY_UP: NUMcomp++;stampaNc();break;
+    case KEY_DN: NUMcomp--;stampaNc();break;      
     }
     ////////end switch////////////////    
     //IRricevuto=5; // 5 secondi to clear
