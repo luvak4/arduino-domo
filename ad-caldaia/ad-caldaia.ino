@@ -46,7 +46,7 @@ byte CIFR[]={223,205,228,240,43,146,241,//
 #define DATOb           2   //  "
 #define DATOc           3   //  "
 #define BYTEStoTX       8   // numbero of bytes to tx
-#define AGCdelay 1000       // delay for AGC
+#define AGCdelay 2000       // delay for AGC
 int     INTERIlocali[4]={0,0,0,0}; // N.Mess,Da,Db,Dc
 byte    BYTEradio[BYTEStoTX];
 uint8_t buflen = BYTEStoTX; //for rx
@@ -63,10 +63,10 @@ byte SecPhotoC=0;
 byte SecPhotoD=0;
 //
 unsigned int minuti;
-unsigned int MinPhotoA=0;
-unsigned int MinPhotoB=0;
-unsigned int MinPhotoC=0;
-unsigned int MinPhotoD=0;
+unsigned int MinPhotoA=10;
+unsigned int MinPhotoB=20;
+unsigned int MinPhotoC=30;
+unsigned int MinPhotoD=40;
 //
 unsigned long tempo;
 //
@@ -170,7 +170,7 @@ void loop(){
       //
       tx();      
       break;
-  case MASTCc:
+    case MASTCc:
       byte n=0;
       // imposta l'indirizzo
       INTERIlocali[MESSnum]=CALDAc;
@@ -191,13 +191,12 @@ void loop(){
         n=n || 1;
       }
       byte m=0;               
-      INTERIlocali[DATOa]=BYTEtoINT(n,m);
+      INTERIlocali[DATOa]=7;//BYTEtoINT(n,m);
       INTERIlocali[DATOb]=0;
       INTERIlocali[DATOc]=0;
       //
       tx();         
-    break;
-      
+      break;     
     }
   }  
 }
