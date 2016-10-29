@@ -54,7 +54,7 @@ uint8_t buflen = BYTEStoTX; //for rx
 /*--------------------------------
 ** varie
 */
-#define SOGLIA   400
+#define SOGLIA   700
 //
 byte secondi;
 byte SecPhotoA=0;
@@ -90,6 +90,7 @@ void loop(){
 ** tieni il tempo
 */
   if ((abs(millis()-tempo))>1000){
+    /*
     Serial.print(analogRead(pin_photoA));
     Serial.print("-");
     Serial.print(analogRead(pin_photoB));
@@ -98,7 +99,7 @@ void loop(){
     Serial.print("-");
     Serial.print(analogRead(pin_photoD));
     Serial.println();
-    
+    */
     tempo=millis();
     secondi+=1;
     if (secondi > 59){
@@ -112,28 +113,28 @@ void loop(){
 	MinPhotoD=0;
       }
     }
-    if (analogRead(pin_photoA)>SOGLIA){
+    if (analogRead(pin_photoA)<SOGLIA){
       SecPhotoA+=1;
       if (SecPhotoA>59){
 	SecPhotoA=0;
 	MinPhotoA+=1;
       }
     }
-    if (analogRead(pin_photoB)>SOGLIA){
+    if (analogRead(pin_photoB)<SOGLIA){
       SecPhotoB+=1;
       if (SecPhotoB>59){
 	SecPhotoB=0;
 	MinPhotoB+=1;
       }
     }
-    if (analogRead(pin_photoC)>SOGLIA){
+    if (analogRead(pin_photoC)<SOGLIA){
       SecPhotoC+=1;
       if (SecPhotoC>59){
 	SecPhotoC=0;
 	MinPhotoC+=1;
       }
     }
-    if (analogRead(pin_photoD)>SOGLIA){
+    if (analogRead(pin_photoD)<SOGLIA){
       SecPhotoD+=1;
       if (SecPhotoD>59){
 	SecPhotoD=0;
@@ -147,6 +148,7 @@ void loop(){
   if (vw_get_message(BYTEradio, &buflen)){
     vw_rx_stop();
     decodeMessage();
+    Serial.println(INTERIlocali[MESSnum]);
     switch (INTERIlocali[MESSnum]){
     case MASTCa:
       // imposta l'indirizzo
@@ -168,6 +170,34 @@ void loop(){
       //
       tx();      
       break;
+  case MASTCc:
+      byte n=0;
+      // imposta l'indirizzo
+      INTERIlocali[MESSnum]=CALDAc;
+      // valori in memoria
+      if (analogRead(pin_photoD)<SOGLIA){
+        n=1;
+      }
+      n=n<<1;
+      if (analogRead(pin_photoC)<SOGLIA){
+        n=n || 1;
+      }    
+     n=n<<1;
+      if (analogRead(pin_photoB)<SOGLIA){
+        n=n || 1;
+      }  
+     n=n<<1;
+      if (analogRead(pin_photoA)<SOGLIA){
+        n=n || 1;
+      }
+      byte m=0;               
+      INTERIlocali[DATOa]=BYTEtoINT(n,m);
+      INTERIlocali[DATOb]=0;
+      INTERIlocali[DATOc]=0;
+      //
+      tx();         
+    break;
+      
     }
   }  
 }
@@ -228,4 +258,16 @@ void tx(){
   vw_send((uint8_t *)BYTEradio,BYTEStoTX);
   vw_wait_tx();
   vw_rx_start();
+}
+/*--------------------------------
+* BYTEtoINT()
+*/
+// conversione da due byte ad un intero
+//
+int BYTEtoINT(byte& lsb, byte& msb){
+  int x;
+  x = msb;
+  x = x << 8;
+  x = x & lsb;
+  return x;
 }
