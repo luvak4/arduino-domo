@@ -54,8 +54,9 @@ uint8_t buflen = BYTEStoTX; //for rx
 /*--------------------------------
 ** varie
 */
-#define SOGLIA   700
+const int SOGLIA=   700;
 //
+
 byte secondi;
 byte SecPhotoA=0;
 byte SecPhotoB=0;
@@ -63,10 +64,10 @@ byte SecPhotoC=0;
 byte SecPhotoD=0;
 //
 unsigned int minuti;
-unsigned int MinPhotoA=10;
-unsigned int MinPhotoB=20;
-unsigned int MinPhotoC=30;
-unsigned int MinPhotoD=40;
+unsigned int MinPhotoA=0;
+unsigned int MinPhotoB=0;
+unsigned int MinPhotoC=0;
+unsigned int MinPhotoD=0;
 //
 unsigned long tempo;
 //
@@ -177,7 +178,7 @@ void loop(){
       // valori in memoria
       if (analogRead(pin_photoD)<SOGLIA){
         n=1;
-      }
+      } 
       n=n<<1;
       if (analogRead(pin_photoC)<SOGLIA){
         n=n || 1;
@@ -190,8 +191,21 @@ void loop(){
       if (analogRead(pin_photoA)<SOGLIA){
         n=n || 1;
       }
-      byte m=0;               
-      INTERIlocali[DATOa]=7;//BYTEtoINT(n,m);
+      
+      Serial.print(analogRead(pin_photoD));
+      Serial.print("-");
+      Serial.print(analogRead(pin_photoC));
+      Serial.print("-");
+      Serial.print(analogRead(pin_photoB));
+      Serial.print("-");
+      Serial.print(analogRead(pin_photoA));
+      Serial.println();
+            Serial.println(n);
+      //byte m=0;    
+//      Serial.print(n);Serial.print("-");Serial.print(m);
+      //Serial.println();        
+      INTERIlocali[DATOa]=n;
+      //Serial.println(INTERIlocali[DATOa]);
       INTERIlocali[DATOb]=0;
       INTERIlocali[DATOc]=0;
       //
@@ -257,16 +271,4 @@ void tx(){
   vw_send((uint8_t *)BYTEradio,BYTEStoTX);
   vw_wait_tx();
   vw_rx_start();
-}
-/*--------------------------------
-* BYTEtoINT()
-*/
-// conversione da due byte ad un intero
-//
-int BYTEtoINT(byte& lsb, byte& msb){
-  int x;
-  x = msb;
-  x = x << 8;
-  x = x & lsb;
-  return x;
 }
