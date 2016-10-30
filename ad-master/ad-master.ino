@@ -572,8 +572,8 @@ void tx(){
 	      txDISPLAY(16,1);    
 	      break;
 	    case CALDAc:
-	      sprintf(buf, "%4d",INTERIlocali[DATOa]);
-	      CARATTERI=String(buf);
+	      sprintf(buf, "%4d",INTERIlocali[DATOa]);    
+	      CARATTERI=String(buf);        
 	      txDISPLAY(0,2);    
 	      break;
 	    case CANTIokA:
@@ -646,6 +646,9 @@ void tx(){
 	//
 	vw_rx_start();
       } 
+      delay(300);
+    CARATTERI = "  ";
+    txDISPLAY(0,0); 
     } else {
     CARATTERI = "??";
     txDISPLAY(0,0); 
