@@ -160,9 +160,22 @@ void loop() {
     INDIRIZZO = INDIRIZZO + BYTEradioDisplay[DISPLAYindirizzoLSB];
     // se indirizzo corretto
     switch (INDIRIZZO){
-    case MASTRdisplay:
+    case MASTRdisplay:      
       digitalWrite(led_pin_rx,HIGH);
-      // assembla messaggio
+      // controllo che non sia un comando
+      // per il display
+      String s="";
+      for (int n=0; n<BYTEradioDisplay[DISPLAYnCaratteri];n++){
+	char t=BYTEradioDisplay[n+DISPLAYinizioTesto];
+	s+=t;
+      }
+      if (s=="<clear>"){
+	lcd.clear();
+	// esce
+	break;
+      }
+      // non è un comando per il display:
+      // quindi assembla messaggio
       // su display: partenza
       lcd.setCursor(BYTEradioDisplay[DISPLAYcolonna],BYTEradioDisplay[DISPLAYriga]);
       // pulizia display che miserve anche per
