@@ -181,15 +181,15 @@ void loop(){
       } 
       n=n<<1;
       if (analogRead(pin_photoC)<SOGLIA){
-        n=n || 1;
+        n=n | 1;
       }    
      n=n<<1;
       if (analogRead(pin_photoB)<SOGLIA){
-        n=n || 1;
+        n=n | 1;
       }  
      n=n<<1;
       if (analogRead(pin_photoA)<SOGLIA){
-        n=n || 1;
+        n=n | 1;
       }
       
       Serial.print(analogRead(pin_photoD));
