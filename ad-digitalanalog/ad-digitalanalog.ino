@@ -428,7 +428,7 @@ void ROU_CANTIa(){
   // stato rele A e B
   byte n=digitalRead(pin_releB);
   n = n<<1;
-  n = n & digitalRead(pin_releA);
+  n = n | digitalRead(pin_releA);
   //
   INTERIlocali[DATOc] = n;
   // tx
@@ -524,7 +524,7 @@ void fxSOGLIE(int& x, int INCDECx, int MAXx, int MINx) {
 void EEPROMsaveRele(){
   byte n=digitalRead(pin_releB);
   n = n<<1;
-  n=n || digitalRead(pin_releA);
+  n=n | digitalRead(pin_releA);
   EEPROM.write(EEPrele,n);
 }
 /*--------------------------------
