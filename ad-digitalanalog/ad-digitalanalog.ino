@@ -1,5 +1,8 @@
 // -*-c++-*-
+// non funzona la rilevazione di SALITA / discesa 
+// e livelli di luce
 // fare routine per pulsanti
+// non funziona caricamento/salvataggio EEPROM soglie
 ////////////////////////////////
 // DIGITAL-ANALOG
 ////////////////////////////////
