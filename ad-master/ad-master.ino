@@ -223,9 +223,9 @@ void setup()
   vw_setup(VELOCITAstd);       
   vw_rx_start();               
   irrecv.enableIRIn();
-  DISPLAYenable=EEPROM.read(eepDISPLAY);
-  autoMASTRa=EEPROM.read(eepMASTRa);
-  autoMASTRo=EEPROM.read(eepMASTRo);
+  DISPLAYenable=true;//EEPROM.read(eepDISPLAY);
+  autoMASTRa=false;//EEPROM.read(eepMASTRa);
+  autoMASTRo=false;//EEPROM.read(eepMASTRo);
 }
 //
 /*--------------------------------
@@ -312,10 +312,10 @@ void chechForIR(){
       switch (NUMcomp){
 	// comandi interni
       case MASTRclear: clearDISPLAY(); NUMcomp=0; break;
-      case MASTRaa:autoMASTRa=true;EEPROMsaveRipeti(); break;
-      case MASTRab:autoMASTRa=false;EEPROMsaveRipeti();	break;
-      case MASTRoo:autoMASTRo=true;EEPROMsaveRipeti();	break;
-      case MASTRop:autoMASTRo=false;EEPROMsaveRipeti();	break;
+      case MASTRaa:autoMASTRa=true;EEPROM.write(eepMASTRa,autoMASTRa);break;
+      case MASTRab:autoMASTRa=false;EEPROM.write(eepMASTRa,autoMASTRa);break;
+      case MASTRoo:autoMASTRo=true;EEPROM.write(eepMASTRo,autoMASTRo);break;
+      case MASTRop:autoMASTRo=false;EEPROM.write(eepMASTRo,autoMASTRo);break;
       case MASTRdon:DISPLAYenable=true;EEPROM.write(eepDISPLAY,DISPLAYenable);break;
       case MASTRdof:DISPLAYenable=false;EEPROM.write(eepDISPLAY,DISPLAYenable);break;
 	// comandi radio
@@ -521,13 +521,13 @@ void tx(){
 	    clearDISPLAY();
 	    CARATTERI = "STATO CALDAIA (" + String(CALDAc) + ")";
 	    txDISPLAY(0,0);
-	    CARATTERI = "TERMO : " +  getONorFF(INTERILOCALI[DATOa]&1)
+	    CARATTERI = "TERMO : " +  getONorFF(INTERIlocali[DATOa]&1);
 	    txDISPLAY(0,1);
-	    CARATTERI = "ACQUA : " +  getONorFF(INTERILOCALI[DATOa]&2)
+	    CARATTERI = "ACQUA : " +  getONorFF(INTERIlocali[DATOa]&2);
 	    txDISPLAY(0,2);	    
-	    CARATTERI = "FIAMMA: " +  getONorFF(INTERILOCALI[DATOa]&4)
+	    CARATTERI = "FIAMMA: " +  getONorFF(INTERIlocali[DATOa]&4);
 	    txDISPLAY(0,3);	    
-	    CARATTERI = "caldaia: " +  getONorFF(INTERILOCALI[DATOa]&8)
+	    CARATTERI = "caldaia: " +  getONorFF(INTERIlocali[DATOa]&8);
 	    txDISPLAY(9,3);	    
 	    break;
 	  case CANTIokA:
@@ -555,14 +555,14 @@ void tx(){
 	    clearDISPLAY();
 	    CARATTERI =  "DIGITAL-A (" + String(CANTIa) + ")";
 	    txDISPLAY(0,0);
-	    CARATTERI = "TEMP: " + String(INTERIlocali[DATOb]);
+	    CARATTERI = "TEMP:" + String(INTERIlocali[DATOb]);
 	    txDISPLAY(0,1);
-	    CARATTERI = "LUCE: " + String(INTERIlocali[DATOa]);
-	    txDISPLAY(9,1);
-	    CARATTERI = "rele A: " +  getONorFF(INTERILOCALI[DATOc]&1)
-	    txDISPLAY(0,2);
-	    CARATTERI = "rele B: " +  getONorFF(INTERILOCALI[DATOc]&2)
-	    txDISPLAY(9,2);
+	    CARATTERI = "LUCE:" + String(INTERIlocali[DATOa]);
+	    txDISPLAY(11,1);
+	    CARATTERI = "relA:" +  getONorFF(INTERIlocali[DATOc]&1);
+	    txDISPLAY(0,3);
+	    CARATTERI = "relB:" +  getONorFF(INTERIlocali[DATOc]&2);
+	    txDISPLAY(11,3);
 	    break;
 	  case CANTIb:
 	    clearDISPLAY();
@@ -614,8 +614,8 @@ void tx(){
 	    }
 	    txDISPLAY(0,2);
 	    //
-	    CARATTERI="min T: " +string(INTERIlocali[DATOb]);
-	    CARATTERI+=" L: " +string(INTERIlocali[DATOC]);
+	    CARATTERI="min T: " +String(INTERIlocali[DATOb]);
+	    CARATTERI+=" L: " +String(INTERIlocali[DATOc]);
 	    txDISPLAY(0,3);
 	    break;
 	  }
@@ -627,9 +627,9 @@ void tx(){
     //CARATTERI = "  ";
     //txDISPLAY(0,0); 
   } else {
-    clearDISPLAY();
-    CARATTERI = "<nessuna risposta>";
-    txDISPLAY(0,0); 
+    //clearDISPLAY();
+    //CARATTERI = "<nessuna risposta>";
+    //txDISPLAY(0,0); 
   }
 }
 /*--------------------------------
