@@ -1,36 +1,32 @@
 // -*-c++-*-
 // verificare che agc delay serva oppure no
-// quando non si ottiene risposta entro determinato tempo
-// segnalare inviando byte conformato in un certo modo
+// *quando non si ottiene risposta entro determinato tempo
+// *segnalare inviando byte conformato in un certo modo
 // *impostare la lettura automatica ogni minuto
 // *impostare la disabilitazione dell'invio a display
 // *salvare i parametri in EEPROM
-
 ////////////////////////////////
 // MASTER (ex 'tastiera')
 ////////////////////////////////
-
-// E' l'unita radio che fa domande alle pertiferiche
+// E' l'unita radio che fa domande alle periferiche
 // attende le risposte, le ripete per i
 // dispositivi nelle vicinanze e accetta 
-// domande (che ripetera) da dispositivi nelle vicinanze
-
-/*
-             +-----------+
-             |           |
-             |           |         
-      IR --->| 2         |
-             |           |
-radio rx --->| 11     12 |---> radio tx
-             |           |
-             +-----------+
-                ARDUINO
-              ATMEGA 328
-*/
-
-/*////////////////////////////////
+// domande (che ripetera') da dispositivi nelle vicinanze
+//
+//              +-----------+
+//              |           |
+//              |           |         
+//       IR --->| 2         |
+//              |           |
+// radio rx --->| 11     12 |---> radio tx
+//              |           |
+//              +-----------+
+//               ARDUINO
+//               ATMEGA 328
+//
+/*--------------------------------
 * configurazioni
-*/////////////////////////////////
+*/
 #include <IRremote.h> 
 #include <VirtualWire.h>
 #include <EEPROM.h>
@@ -58,6 +54,7 @@ const int pin_ir  =  2; // ir pin
 /*--------------------------------
 ** domande (OUT)
 */
+// cantina
 #define MASTRa 101 // get luce/temp/rele               (CANTIa)
 #define MASTRb 102 // !- set temp (soglia) up   +10    (CANTIb)
 #define MASTRc 103 // !- set temp (soglia) down -10    (CANTIb)
@@ -73,12 +70,13 @@ const int pin_ir  =  2; // ir pin
 #define MASTRm 113 // >>> carica EEPROM                (CANTIokB)
 #define MASTRn 114 // >>> carica DEFAULT               (CANTIokC)
 #define MASTRo 115 // get temp/luce STATO/tempo        (CANTId)
-#define MASTRp 116 // rele A ON                          (CANTIa)
-#define MASTRq 117 // rele A OFF                         (CANTIa)
-#define MASTRr 118 // rele A toggle                      (CANTIa)
-#define MASTRpp 119 // rele B ON                          (CANTIa)
-#define MASTRqq 120 // rele B OFF                         (CANTIa)
-#define MASTRrr 121 // rele B toggle                      (CANTIa)
+#define MASTRp 116 // rele A ON                        (CANTIa)
+#define MASTRq 117 // rele A OFF                       (CANTIa)
+#define MASTRr 118 // rele A toggle                    (CANTIa)
+#define MASTRpp 119 // rele B ON                       (CANTIa)
+#define MASTRqq 120 // rele B OFF                      (CANTIa)
+#define MASTRrr 121 // rele B toggle                   (CANTIa)
+// interno
 #define MASTRaa 122 // ogni minuto MASTRa
 #define MASTRab 123 // disable ogni minuto MASTRa
 #define MASTRoo 124 // ogni minuto MASTRo
@@ -86,9 +84,11 @@ const int pin_ir  =  2; // ir pin
 #define MASTRdon 126 // enable invio a display
 #define MASTRdof 127 // disable invio a display
 #define MASTRclear 130 // clear display
+// caldaia
 #define MASTCa 150 // leggi tempo led A/B/C
 #define MASTCb 151 // leggi tempo led D
 #define MASTCc 152 // get stato leds
+// pfsense
 #define MASTSa 200 // move servoA (push button)
 #define MASTSb 201 // move servoB (push button)
 #define MASTSa 202 // get stato leds servoA and servoB
@@ -119,10 +119,10 @@ const int pin_ir  =  2; // ir pin
 ** radio tx rx
 */
 byte CIFR[]={223,205,228,240,43,146,241,//
-         87,213,48,235,131,6,81,26,//
-         70,34,74,224,27,111,150,22,//
-         138,239,200,179,222,231,212};
-#define mask 0x00FF
+	     87,213,48,235,131,6,81,26,//
+	     70,34,74,224,27,111,150,22,//
+	     138,239,200,179,222,231,212};
+#define mask       0x00FF
 #define VELOCITAstd   500   // velocita standard
 #define MESSnum         0   // posizione in BYTEradio
 #define DATOa           1   //  "
@@ -130,8 +130,8 @@ byte CIFR[]={223,205,228,240,43,146,241,//
 #define DATOc           3   //  "
 #define BYTEStoTX       8   // numbero of bytes to tx
 #define AGCdelay 1000       // delay for AGC
-int     INTERIlocali[4]={0,0,0,0}; // N.Mess,Da,Db,Dc
-byte    BYTEradio[BYTEStoTX];
+int     INTERIlocali[4]={0,0,0,0}; // N.Mess,DatoA,DatoB,DatoC
+byte    BYTEradio[BYTEStoTX];  // buffer per la trasmissione
 uint8_t buflen = BYTEStoTX; //for rx
 /*--------------------------------
 ** LCM
@@ -146,6 +146,7 @@ String  CARATTERI;
 #define DISPLAYnCaratteri      4
 #define DISPLAYinizioTesto     5
 #define VELOCITAhi          2000
+#define delayAGCdisplay      300
 // CARATTERI personalizzati
 #define SIMBluce  1 //0 -> incrementato x problemi con String
 #define SIMBtermo 2 //1
@@ -155,11 +156,11 @@ String  CARATTERI;
 #define SIMBlivE  6 //5
 #define SIMBlivF  7 //6
 #define SIMBgiu   8 //7
-// CARATTERI interni (cambiano secondo il display)
+// CARATTERI interni
 #define SIMBsu    B01011110
 #define SIMBlivA  B01011111
-#define SIMBon    255
-#define SIMBoff   252
+#define SIMBon    255 //* cambia secondo il display
+#define SIMBoff   252 //* cambia secondo il display
 /*--------------------------------
 ** stati
 */
@@ -187,28 +188,32 @@ String  CARATTERI;
 #define KEY_DN     712987970
 #define KEY_OK   -1812574087
 #define KEY_CLEAR -477592334
-
-
-
-
+//
 IRrecv irrecv(pin_ir); // ir initialize library
 decode_results irX;    // ir variable
+//
+int NUMcomp=0;  // numero che viene composto con IR
 /*--------------------------------
-** varie
+** EEPROM
 */
-int NUMcomp=0;
+#define eepMASTRa 0
+#define eepDISPLAY 1
+#define eepMASTRo 2
+bool autoMASTRa=false;  // tx automatico MASTRa (valori)
+bool autoMASTRo=false;  // tx automatico MASTRo (stato)
+bool DISPLAYenable=true;
+#define secAA 1            // al secondo 1 di ogni min, se abilitato, tx MASTRa
+#define secOO 10           // al secondo 10 di ogni min, se abilitato, tx MASTRo
+/*--------------------------------
+** tempo
+*/
 unsigned long tempo;
 byte decimi;
 byte secondi;
 byte minuti;
-bool MINUTIenableAA=false;
-bool MINUTIenableOO=false;
-bool DISPLAYenable=true;
-
-// EEPROM
-#define EEPripeti 0
-#define EEPdisplay 1
-/*////////////////////////////////
+#define maxWAITresponse 3000 // massimo tempo di attesa per una risposta (ms)
+//
+/*--------------------------------
 * setup
 */
 void setup()
@@ -218,17 +223,16 @@ void setup()
   vw_setup(VELOCITAstd);       
   vw_rx_start();               
   irrecv.enableIRIn();
-  //Serial.begin(9600);
-  EEPROMloadRipeti();
-  DISPLAYenable=EEPROM.read(EEPdisplay);
+  DISPLAYenable=EEPROM.read(eepDISPLAY);
+  autoMASTRa=EEPROM.read(eepMASTRa);
+  autoMASTRo=EEPROM.read(eepMASTRo);
 }
-/*////////////////////////////////
+//
+/*--------------------------------
 * loop()
 */
 void loop(){
-  /*
-  ** tieni il tempo
-  */
+  // tieni il tempo
   if ((abs(millis()-tempo))>100){
     tempo=millis();
     decimi++;
@@ -236,25 +240,17 @@ void loop(){
     //END   ogni decimo
     if (decimi>9){
       //BEGIN ogni secondo
+      switch(secondi){
+      case secAA:
+	if (autoMASTRa){INTERIlocali[MESSnum]=MASTRa;  tx();}	break;
+      case secOO:
+	if (autoMASTRo){INTERIlocali[MESSnum]=MASTRo;  tx();}	break;	  	
+      }
       //END ogni secondo
       decimi=0;
       secondi++;
       if (secondi>59){
 	//BEGIN ogni minuto
-	//
-	// se abilitata la funzione, ogni min
-	// chiede le domande in automatico
-	/*
-	  if (MINUTIenableAA){
-	  INTERIlocali[MESSnum]=MASTRa; 
-	  tx();
-	  }
-	  if (MINUTIenableOO){
-	  INTERIlocali[MESSnum]=MASTRo; 
-	  tx();
-	  }
-	*/
-	//
 	//END   ogni minuto
 	secondi=0;
 	minuti++;
@@ -263,22 +259,19 @@ void loop(){
 	}
       }
     }
-    /*--------------------------------
-    ** IR
-    */
+    // IR
     chechForIR();
   }
 }
-
+//
 /*--------------------------------
 * ritrasmette()
 */
 void ritrasmette(){
-  // =====
+  // 
   // ritrasmette i messaggi ricevuti 
   // cambiando id ma mantenendo i dati ricevuti
-  // =======
-  /*
+  // 
   int ss =INTERIlocali[MESSnum];
   int da =INTERIlocali[DATOa];
   int db =INTERIlocali[DATOb];
@@ -291,8 +284,8 @@ void ritrasmette(){
   INTERIlocali[DATOb]=db;
   INTERIlocali[DATOc]=dc;
   delay(100);
-  */
 }
+//
 /*--------------------------------
 * ir_decode()
 */
@@ -303,6 +296,7 @@ long ir_decode(decode_results *irX){
   //Serial.println(keyLongNumber);
   return keyLongNumber;
 }
+//
 /*--------------------------------
 * chechForIR()
 */
@@ -316,52 +310,16 @@ void chechForIR(){
     switch (key){
     case KEY_OK:
       switch (NUMcomp){
-      case MASTRclear:
-	CARATTERI = "                    ";
-	txDISPLAY(0,0);     
-  delay(300);
-	txDISPLAY(0,1);     
-  delay(300);
-	txDISPLAY(0,2);   
-  delay(300);  
-	txDISPLAY(0,3); 
-  NUMcomp=0;     
-      break;
-      case MASTRaa:
-	MINUTIenableAA=true;
-	EEPROMsaveRipeti();
-	break;
-      case MASTRab:
-	MINUTIenableAA=false;
-	EEPROMsaveRipeti();	
-	break;
-      case MASTRoo:
-	MINUTIenableOO=true;
-	EEPROMsaveRipeti();	
-	break;
-      case MASTRop:
-	MINUTIenableOO=false;
-	EEPROMsaveRipeti();	
-	break;
-      case MASTRdon:
-	DISPLAYenable=true;
-	EEPROM.write(EEPdisplay,DISPLAYenable);
-	break;
-      case MASTRdof:
-	DISPLAYenable=false;
-	EEPROM.write(EEPdisplay,DISPLAYenable);
-	break;
-      default:
-	////////////////////////////////
-	// invia il numero composto da IR
-	////////////////////////////////
-	stampaNc();
-	INTERIlocali[MESSnum]=NUMcomp;
-	INTERIlocali[DATOa]=0;
-	INTERIlocali[DATOb]=0;
-	INTERIlocali[DATOc]=0;
-	tx();
-	break;
+	// comandi interni
+      case MASTRclear: clearDISPLAY(); NUMcomp=0; break;
+      case MASTRaa:autoMASTRa=true;EEPROMsaveRipeti(); break;
+      case MASTRab:autoMASTRa=false;EEPROMsaveRipeti();	break;
+      case MASTRoo:autoMASTRo=true;EEPROMsaveRipeti();	break;
+      case MASTRop:autoMASTRo=false;EEPROMsaveRipeti();	break;
+      case MASTRdon:DISPLAYenable=true;EEPROM.write(eepDISPLAY,DISPLAYenable);break;
+      case MASTRdof:DISPLAYenable=false;EEPROM.write(eepDISPLAY,DISPLAYenable);break;
+	// comandi radio
+      default:	stampaNc();INTERIlocali[MESSnum]=NUMcomp;tx();break;
       }
       break;
     case KEY_1: scorriNumero(1);break;
@@ -379,17 +337,18 @@ void chechForIR(){
     case KEY_DN:NUMcomp--; stampaNc(); break;      
     }
     ////////end switch////////////////    
-    //IRricevuto=5; // 5 secondi to clear
     delay(100);
     irrecv.resume();
   }
   /////end check for IR///////////
 }
+//
 /*--------------------------------
 * txDISPLAY()
 */
 // trasmette al display via radio
 // occorre riempire anche il testo
+// "CARATTERI"
 //
 void txDISPLAY(byte colonna, byte riga){
   // pulisce bytes-radio
@@ -425,30 +384,33 @@ void txDISPLAY(byte colonna, byte riga){
   vw_setup(VELOCITAhi);
   vw_send((uint8_t *)BYTEradioindirDISPLAY,VW_MAX_PAYLOAD);
   vw_wait_tx();
+  // ritardo per AGC
+  delay(delayAGCdisplay);
   // ripristino velocita
   vw_setup(VELOCITAstd);
   vw_rx_start();
 }
+//
 /*--------------------------------
 * stampaNc()
 */
-// stampa numero ricevuto via IR
+// trasmette al display il numero
+// ricevuto via IR
 //
 void stampaNc(){
-  //char buf[5];
-  //sprintf(buf, "%5d",NUMcomp); 
+  char buf[5];
   CARATTERI="     ";
-  //txDISPLAY(10,0);//---->
-  //delay(300);
   if (NUMcomp!=0){
-  CARATTERI=String(NUMcomp);
+    sprintf(buf, "%5d",NUMcomp);
+    CARATTERI=buf;
   }
   txDISPLAY(10,0);//---->
 }
 /*--------------------------------
 * scorriNumero()
 */
-// viene composto il numero
+// viene composto il numero digitato
+// via IR
 //
 void scorriNumero(byte aggiungi){
   NUMcomp=NUMcomp*10+aggiungi;
@@ -468,33 +430,8 @@ void INTtoBYTE(int x, byte& lsb, byte& msb){
   msb = x & 0x00FF;
 }
 /*--------------------------------
-* EEPROMsaveRipeti()
-*/
-// salvataggio informazione di ripetizione
-// (domande automatiche) ogni min
-//
-void EEPROMsaveRipeti(){
-  byte n=MINUTIenableOO;
-  n = n<<1;
-  n=n || MINUTIenableAA;
-  EEPROM.write(EEPripeti,n);
-}
-/*--------------------------------
-* EEPROMloadRipeti()
-*/
-//
-void EEPROMloadRipeti(){
-  byte n=EEPROM.read(EEPripeti);
-  n=n & 1;
-  MINUTIenableAA=n;
-  n=EEPROM.read(EEPripeti);
-  n=n>>1;
-  n=n & 1;
-  MINUTIenableOO=n;
-}
-/*--------------------------------
-* decodeMessage()
-*/
+ * decodeMessage()
+ */
 // RADIO -> locale
 //
 void decodeMessage(){
@@ -508,8 +445,8 @@ void decodeMessage(){
   }
 }
 /*--------------------------------
-* encodeMessage()
-*/
+ * encodeMessage()
+ */
 // locale -> RADIO
 //
 void encodeMessage(){
@@ -523,8 +460,8 @@ void encodeMessage(){
   cipher();
 }
 /*--------------------------------
-* cipher()
-*/
+ * cipher()
+ */
 // cifratura XOR del messaggio
 //
 void cipher(){
@@ -533,124 +470,183 @@ void cipher(){
   }
 }
 /*--------------------------------
-* tx()
-*/
+ * tx()
+ */
 void tx(){
-
   encodeMessage();
   vw_rx_stop();
   vw_send((uint8_t *)BYTEradio,BYTEStoTX);
   vw_wait_tx();
   vw_rx_start(); 
-  // Wait at most 3 sec 
-  if (vw_wait_rx_max(3000)){
-      /*--------------------------------
-      ** radio rx
-      */
-      if (vw_get_message(BYTEradio, &buflen)){
-	char buf[4];
-	vw_rx_stop();
-	decodeMessage();
-	ritrasmette();
-	if (DISPLAYenable){
-	  switch (INTERIlocali[MESSnum])
-	    {
-	    case CALDAa:
-	      sprintf(buf, "%4d",INTERIlocali[DATOa]);
-	      CARATTERI=String(buf);
-	      CARATTERI+=" ";
-	      sprintf(buf, "%4d",INTERIlocali[DATOb]);
-	      CARATTERI+=String(buf);
-	      CARATTERI+=" ";
-	      sprintf(buf, "%4d",INTERIlocali[DATOc]);
-	      CARATTERI+=String(buf);
-	      txDISPLAY(0,1);    
+  // attende al massimo 3 secondi per una risposta
+  if (vw_wait_rx_max(maxWAITresponse)){
+    /*--------------------------------
+    ** radio rx
+    */
+    if (vw_get_message(BYTEradio, &buflen)){
+      char buf[20];
+      //
+      vw_rx_stop();
+      //
+      decodeMessage();
+      ritrasmette();
+      if (DISPLAYenable){
+	switch (INTERIlocali[MESSnum]){
+	  case CALDAa:
+	    clearDISPLAY();
+	    CARATTERI = "STATO CALDAIA (" + String(CALDAa) + ")";
+	    txDISPLAY(0,0);
+	    //            12345678901234567890
+	    sprintf(buf,"minuti TERMO : %4d",INTERIlocali[DATOa]);
+	    CARATTERI=String(buf);
+	    txDISPLAY(0,1);
+	    //            12345678901234567890
+	    sprintf(buf,"minuti ACQUA : %4d",INTERIlocali[DATOb]);
+	    CARATTERI=String(buf);
+	    txDISPLAY(0,2);
+	    //            12345678901234567890
+	    sprintf(buf,"minuti FIAMMA: %4d",INTERIlocali[DATOc]);
+	    CARATTERI=String(buf);
+	    txDISPLAY(0,3);	    	    
+	    break;
+	  case CALDAb:
+	    clearDISPLAY();
+	    CARATTERI = "STATO CALDAIA (" + String(CALDAb) + ")";
+	    txDISPLAY(0,0);
+	    sprintf(buf,"minuti ON: %4d",INTERIlocali[DATOa]);
+	    CARATTERI=String(buf);
+	    txDISPLAY(0,1);
+	    break;
+	  case CALDAc:
+	    clearDISPLAY();
+	    CARATTERI = "STATO CALDAIA (" + String(CALDAc) + ")";
+	    txDISPLAY(0,0);
+	    CARATTERI = "TERMO : " +  getONorFF(INTERILOCALI[DATOa]&1)
+	    txDISPLAY(0,1);
+	    CARATTERI = "ACQUA : " +  getONorFF(INTERILOCALI[DATOa]&2)
+	    txDISPLAY(0,2);	    
+	    CARATTERI = "FIAMMA: " +  getONorFF(INTERILOCALI[DATOa]&4)
+	    txDISPLAY(0,3);	    
+	    CARATTERI = "caldaia: " +  getONorFF(INTERILOCALI[DATOa]&8)
+	    txDISPLAY(9,3);	    
+	    break;
+	  case CANTIokA:
+	    clearDISPLAY();
+	    CARATTERI =  "DIGITAL-A (" + String(CANTIokA) + ")";
+	    txDISPLAY(0,0);	    
+	    CARATTERI = "OK salva su EEPROM";
+	    txDISPLAY(0,1);	    
+	    break;
+	  case CANTIokB:
+	    clearDISPLAY();
+	    CARATTERI = "DIGITAL-A (" + String(CANTIokB) + ")";
+	    txDISPLAY(0,0);	    
+	    CARATTERI = "OK carica da EEPROM";
+	    txDISPLAY(0,1);	    	    
+	    break;
+	  case CANTIokC:
+	    clearDISPLAY();
+	    CARATTERI = "DIGITAL-A (" + String(CANTIokC) + ")";
+	    txDISPLAY(0,0);	    
+	    CARATTERI = "OK carica default";
+	    txDISPLAY(0,1);	    	    	    
+	    break;    
+	  case CANTIa:
+	    clearDISPLAY();
+	    CARATTERI =  "DIGITAL-A (" + String(CANTIa) + ")";
+	    txDISPLAY(0,0);
+	    CARATTERI = "TEMP: " + String(INTERIlocali[DATOb]);
+	    txDISPLAY(0,1);
+	    CARATTERI = "LUCE: " + String(INTERIlocali[DATOa]);
+	    txDISPLAY(9,1);
+	    CARATTERI = "rele A: " +  getONorFF(INTERILOCALI[DATOc]&1)
+	    txDISPLAY(0,2);
+	    CARATTERI = "rele B: " +  getONorFF(INTERILOCALI[DATOc]&2)
+	    txDISPLAY(9,2);
+	    break;
+	  case CANTIb:
+	    clearDISPLAY();
+	    CARATTERI =  "DIGITAL-A (" + String(CANTIb) + ")";
+	    txDISPLAY(0,0);
+	    CARATTERI = "soglia TEMP: " + String(INTERIlocali[DATOa]);
+	    txDISPLAY(0,1);
+	    CARATTERI = "soglia 'A' LUCE: " + String(INTERIlocali[DATOb]);
+	    txDISPLAY(0,2);
+	    CARATTERI = "soglia 'B' LUCE: " + String(INTERIlocali[DATOc]);
+	    txDISPLAY(0,3);
+	    break;
+	  case CANTIc:
+	    clearDISPLAY();
+	    CARATTERI =  "DIGITAL-A (" + String(CANTIc) + ")";
+	    txDISPLAY(0,0);
+	    CARATTERI = "delay AGC: " + String(INTERIlocali[DATOa]);
+	    txDISPLAY(0,1);
+	    break;
+	  case CANTId:
+	    clearDISPLAY();
+	    CARATTERI =  "DIGITAL-A (" + String(CANTId) + ")";
+	    txDISPLAY(0,0);   
+	    byte stLuce=INTERIlocali[DATOa] & 0x00FF;
+	    CARATTERI="stato LUCE: ";
+	    switch (stLuce){
+	    case LUCEpoca:
+	      CARATTERI+="poca";
 	      break;
-	    case CALDAb:
-	      sprintf(buf, "%4d",INTERIlocali[DATOa]);
-	      CARATTERI=String(buf);
-	      txDISPLAY(16,1);    
+	    case LUCEmedia:
+	      CARATTERI+="media";
 	      break;
-	    case CALDAc:
-	      sprintf(buf, "%4d",INTERIlocali[DATOa]);    
-	      CARATTERI=String(buf);        
-	      txDISPLAY(0,2);    
-	      break;
-	    case CANTIokA:
-	      break;
-	    case CANTIokB:
-	      break;
-	    case CANTIokC:
-	      break;    
-	    case CANTIa:
-	      CARATTERI=char(SIMBtermo);
-	      sprintf(buf, "%4d",INTERIlocali[DATOb]);
-	      CARATTERI+=String(buf);
-	      CARATTERI+=char(SIMBluce);
-	      sprintf(buf, "%4d",INTERIlocali[DATOa]);
-	      CARATTERI+=String(buf);
-	      if (INTERIlocali[DATOc]>0){
-		CARATTERI += char(SIMBon); 
-	      } else {
-		CARATTERI += char(SIMBoff);     
-	      }  
-	      txDISPLAY(0,3);
-	      break;
-	    case CANTIb:
-	      sprintf(buf, "%3d",INTERIlocali[DATOa]);
-	      CARATTERI   = String(buf) + " ";
-	      sprintf(buf, "%2d",INTERIlocali[DATOb]);
-	      CARATTERI  += String(buf) + " ";
-	      sprintf(buf, "%3d",INTERIlocali[DATOc]);
-	      CARATTERI  += buf;
-	      txDISPLAY(5,1);
-	      break;
-	    case CANTIc:
-	      sprintf(buf, "%4d",INTERIlocali[DATOa]);
-	      CARATTERI  = buf;
-	      txDISPLAY(0,1);
-	      break;
-	    case CANTId:
-	      byte stTemp;
-	      byte stLuce;
-	      INTtoBYTE(INTERIlocali[DATOa],stTemp,stLuce);
-	      //
-	      sprintf(buf, "%4d",INTERIlocali[DATOb]);  
-	      switch(stTemp){
-	      case SALITA:
-		CARATTERI  = char(SIMBsu);
-		break;
-	      case DISCESA:
-		CARATTERI  = char(SIMBgiu); 
-		break;
-	      }
-	      CARATTERI += String(buf) + "   ";
-	      //
-	      sprintf(buf, "%4d",INTERIlocali[DATOc]);  
-	      switch(stLuce){
-	      case LUCEpoca:
-		CARATTERI += String(char(SIMBlivA));
-		break;
-	      case LUCEmedia:
-		CARATTERI+= char(SIMBlivD);      
-		break;
-	      case LUCEtanta:
-		CARATTERI+= char(SIMBlivF);      
-		break;      
-	      }
-	      CARATTERI += buf;
-	      txDISPLAY(0,2);
-	      break;
+	    case LUCEtanta:
+	      CARATTERI+="tanta";
+	      break;	      	      
 	    }
-	}
-	//
-	vw_rx_start();
-      } 
-      delay(300);
-    CARATTERI = "  ";
+	    txDISPLAY(0,1);	    
+	    //
+	    INTERIlocali[DATOa]=INTERIlocali[DATOa] >> 8;	    
+	    byte stTemp=INTERIlocali[DATOa] & 0x00FF;	    
+	    CARATTERI="stato TEMP: ";
+	    switch (stTemp){
+	    case SALITA:
+	      CARATTERI+="salita";
+	      break;
+	    case DISCESA:
+	      CARATTERI+="discesa";
+	      break;	      
+	    }
+	    txDISPLAY(0,2);
+	    //
+	    CARATTERI="min T: " +string(INTERIlocali[DATOb]);
+	    CARATTERI+=" L: " +string(INTERIlocali[DATOC]);
+	    txDISPLAY(0,3);
+	    break;
+	  }
+      }
+      //
+      vw_rx_start();
+      //
+    } 
+    //CARATTERI = "  ";
+    //txDISPLAY(0,0); 
+  } else {
+    clearDISPLAY();
+    CARATTERI = "<nessuna risposta>";
     txDISPLAY(0,0); 
-    } else {
-    CARATTERI = "??";
-    txDISPLAY(0,0); 
+  }
+}
+/*--------------------------------
+** clearDISPLAY()
+*/
+void clearDISPLAY(){
+CARATTERI = "<clear>";
+txDISPLAY(0,0);     
+//txDISPLAY(0,1);     
+//txDISPLAY(0,2);   
+//txDISPLAY(0,3);  
+}
+
+String getONorFF(byte value){
+  if (value){
+    return "ON";
+  } else {
+    return "off";
   }
 }
