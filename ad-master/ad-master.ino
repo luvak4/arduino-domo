@@ -1,5 +1,6 @@
 // -*-c++-*-
-// verificare che agc delay serva oppure no
+// non funziona la ripetizione automatica del comando
+// *verificare che agc delay serva oppure no
 // *quando non si ottiene risposta entro determinato tempo
 // *segnalare inviando byte conformato in un certo modo
 // *impostare la lettura automatica ogni minuto
@@ -489,7 +490,7 @@ void tx(){
       vw_rx_stop();
       //
       decodeMessage();
-      ritrasmette();
+      //ritrasmette();
       if (DISPLAYenable){
 	switch (INTERIlocali[MESSnum]){
 	  case CALDAa:
