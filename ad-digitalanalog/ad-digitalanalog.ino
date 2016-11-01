@@ -422,12 +422,12 @@ void ROU_CANTIa(){
   INTERIlocali[MESSnum]=CANTIa;
   // recupera valori
   int sensorVal = analogRead(pin_temp);
-  float voltage = (sensorVal / 1024.0) * 5.0;
-  float temperature = (voltage - .5) * 10000;
-  int temper=temperature;
+  //float voltage = (sensorVal / 1024.0) * 5.0;
+  //float temperature = (voltage - .5) * 10000;
+  //int temper=temperature;
   // valori in memoria
   INTERIlocali[DATOa]=analogRead(pin_light);
-  INTERIlocali[DATOb]=temper;
+  INTERIlocali[DATOb]=sensorVal;//temper;
   // stato rele A e B
   byte n=digitalRead(pin_releB);
   n = n<<1;
@@ -677,4 +677,6 @@ void tx(){
   vw_send((uint8_t *)BYTEradio,BYTEStoTX);
   vw_wait_tx();
   vw_rx_start();
+  
+  
 }
