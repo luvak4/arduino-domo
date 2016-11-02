@@ -80,7 +80,7 @@ void setup() {
   vw_setup(VELOCITAstd);
   vw_rx_start();
   tempo=millis();
-  Serial.begin(9600); // debug
+  //Serial.begin(9600); // debug
 }
 //
 /*////////////////////////////////
@@ -149,15 +149,15 @@ void loop(){
   if (vw_get_message(BYTEradio, &buflen)){
     vw_rx_stop();
     decodeMessage();
-    Serial.println(INTERIlocali[MESSnum]);
+    //Serial.println(INTERIlocali[MESSnum]);
     switch (INTERIlocali[MESSnum]){
     case MASTCa:
       // imposta l'indirizzo
       INTERIlocali[MESSnum]=CALDAa;
       // valori in memoria
-      INTERIlocali[DATOa]=MinPhotoA;
-      INTERIlocali[DATOb]=MinPhotoB;
-      INTERIlocali[DATOc]=MinPhotoC;
+      INTERIlocali[DATOa]=MinPhotoA; // fiamma
+      INTERIlocali[DATOb]=MinPhotoB; // termo
+      INTERIlocali[DATOc]=MinPhotoC; // acqua
       //
       tx();
       break;
@@ -165,7 +165,7 @@ void loop(){
       // imposta l'indirizzo
       INTERIlocali[MESSnum]=CALDAb;
       // valori in memoria
-      INTERIlocali[DATOa]=MinPhotoD;
+      INTERIlocali[DATOa]=MinPhotoD; // caldaia accesa
       INTERIlocali[DATOb]=0;
       INTERIlocali[DATOc]=0;
       //
@@ -191,7 +191,7 @@ void loop(){
       if (analogRead(pin_photoA)<SOGLIA){
         n=n | 1;
       }
-      
+      /*
       Serial.print(analogRead(pin_photoD));
       Serial.print("-");
       Serial.print(analogRead(pin_photoC));
@@ -201,6 +201,7 @@ void loop(){
       Serial.print(analogRead(pin_photoA));
       Serial.println();
             Serial.println(n);
+            */
       //byte m=0;    
 //      Serial.print(n);Serial.print("-");Serial.print(m);
       //Serial.println();        
