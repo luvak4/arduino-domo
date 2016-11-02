@@ -85,10 +85,10 @@ String CARATTERI;
 ** varie
 */
 //
-byte CIFR[]={223,205,228,240,43,146,241,//
-         87,213,48,235,131,6,81,26,//
-         70,34,74,224,27,111,150,22,//
-         138,239,200,179,222,231,212};
+byte CIFR[]={223,205,228,240,43,146,241,\
+	     87,213,48,235,131,6,81,26,\
+	     70,34,74,224,27,111,150,22,\
+	     138,239,200,179,222,231,212};
 const unsigned long mask=0x0000FFFF;
 int INDIRIZZO=0;
 /*////////////////////////////////
@@ -174,7 +174,7 @@ void loop() {
 	// esce
 	break;
       }
-      // non è un comando per il display:
+      // non Ã¨ un comando per il display:
       // quindi assembla messaggio
       // su display: partenza
       lcd.setCursor(BYTEradioDisplay[DISPLAYcolonna],BYTEradioDisplay[DISPLAYriga]);
