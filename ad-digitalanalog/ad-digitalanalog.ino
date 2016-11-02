@@ -131,6 +131,7 @@ uint8_t buflen = BYTEStoTX; //for rx
 int  sensorTvalPREC;
 //int  tempVAL;
 //int  tempVALpre;
+int sensorTvalPRE;
 byte tempSTA;    //1=RAISE 0=FALL
 byte tempSTApre; //1=RAISE 0=FALL
 unsigned int  tempMINUTIstato;
@@ -691,13 +692,13 @@ int centigradi(int& valoreSensore){
 			250,255,260,265,270,275,280,285,290,295,300,305,\
 			310,315,320,325,330,335,340,340,345,350,355,360,\
 			365,370,375,380,385,390,395,400,405};
-  if (valoresensore<75){
+  if (valoreSensore<75){
     return -999;
   } else {
-      if (valoresensore>181){
+      if (valoreSensore>181){
 	return 999;
       } else {
-	byte posizione= valoresensore-75;
+	byte posizione= valoreSensore-75;
 	int TEMPER=temperatura[posizione];
 	return TEMPER;	
       }
