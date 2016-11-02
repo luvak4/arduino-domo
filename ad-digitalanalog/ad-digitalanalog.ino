@@ -42,8 +42,8 @@ man.interrA --->| 4         |
 #define pin_releB  3
 #define pin_interA 4
 #define pin_interB 5
-#define pin_pulsA 6
-#define pin_pulsB 7
+#define pin_pulsA  6
+#define pin_pulsB  7
 #define pin_rx    11
 #define pin_tx    12
 #define pin_light A0
@@ -81,12 +81,12 @@ man.interrA --->| 4         |
 #define MASTRm 113 // >>> carica EEPROM                (CANTIokB)
 #define MASTRn 114 // >>> carica DEFAULT               (CANTIokC)
 #define MASTRo 115 // get temp/luce STATO/tempo        (CANTId)
-#define MASTRp 116 // rele A ON                          (CANTIa)
-#define MASTRq 117 // rele A OFF                         (CANTIa)
-#define MASTRr 118 // rele A toggle                      (CANTIa)
-#define MASTRpp 119 // rele B ON                          (CANTIa)
-#define MASTRqq 120 // rele B OFF                         (CANTIa)
-#define MASTRrr 121 // rele B toggle                      (CANTIa)
+#define MASTRp 116 // rele A ON                        (CANTIa)
+#define MASTRq 117 // rele A OFF                       (CANTIa)
+#define MASTRr 118 // rele A toggle                    (CANTIa)
+#define MASTRpp 119 // rele B ON                       (CANTIa)
+#define MASTRqq 120 // rele B OFF                      (CANTIa)
+#define MASTRrr 121 // rele B toggle                   (CANTIa)
 /*--------------------------------
 ** risposte (OUT)
 */
@@ -100,10 +100,10 @@ man.interrA --->| 4         |
 /*--------------------------------
 ** radio tx rx
 */
-byte CIFR[]={223,205,228,240,43,146,241,//
-         87,213,48,235,131,6,81,26,//
-         70,34,74,224,27,111,150,22,//
-         138,239,200,179,222,231,212};
+byte CIFR[]={223,205,228,240,43,146,241,\
+	     87,213,48,235,131,6,81,26,\
+	     70,34,74,224,27,111,150,22,\
+	     138,239,200,179,222,231,212};
 #define mask        0x00FF
 #define VELOCITAstd   500   // velocita standard
 #define MESSnum         0   // posizione in BYTEradio
@@ -128,8 +128,9 @@ uint8_t buflen = BYTEStoTX; //for rx
 /*--------------------------------
 ** variabili temperatura e luce
 */
-int  tempVAL;
-int  tempVALpre;
+int  sensorTvalPREC;
+//int  tempVAL;
+//int  tempVALpre;
 byte tempSTA;    //1=RAISE 0=FALL
 byte tempSTApre; //1=RAISE 0=FALL
 unsigned int  tempMINUTIstato;
@@ -176,9 +177,9 @@ void setup() {
   pinMode(pin_releA, OUTPUT);
   pinMode(pin_releB, OUTPUT);
   pinMode(pin_interA, INPUT);
-  pinMode(pin_interB, INPUT);
-  pinMode(pin_pulsA, INPUT);
-  pinMode(pin_pulsB, INPUT);
+  //pinMode(pin_interB, INPUT);
+  // pinMode(pin_pulsA, INPUT);
+  // pinMode(pin_pulsB, INPUT);
   // radio
   vw_set_tx_pin(pin_tx);
   vw_set_rx_pin(pin_rx);
@@ -211,12 +212,14 @@ void loop(){
     } else {
       antirimbIntA=0;
     }
+    /*
     if ( statoInterruttoreB!=digitalRead(pin_interB)){
       // antirimbalzo interruttore B      
       antirimbIntB++;
     } else {
       antirimbIntB=0;
     }
+    */
     if (antirimbIntA>9){
       // cambio di stato rele da interruttore A
       statoInterruttoreA=digitalRead(pin_interA);
@@ -224,12 +227,14 @@ void loop(){
       EEPROMsaveRele();      
       antirimbIntA=0;	
     }
+    /*
     if (antirimbIntB>9){
       // cambio di stato rele da interruttore B      
       statoInterruttoreB=digitalRead(pin_interB);
       digitalWrite(pin_releB,!digitalRead(pin_releB));      
       antirimbIntB=0;	
-    }    
+    } 
+    */   
     //END   ogni centesimo
     if (centesimi>99){
       //BEGIN ogni secondo
@@ -375,7 +380,7 @@ void ROU_CANTId(){
   // imposta l'indirizzo
   INTERIlocali[MESSnum]=CANTId;
   // valori in memoria
-  INTERIlocali[DATOa]=BYTEtoINT(tempSTA,luceSTA);
+  INTERIlocali[DATOa]=BYTEStoINT(tempSTA,luceSTA);
   // usato un 'int' per memorizzare due byte (temperSTA e luceSTA)
   INTERIlocali[DATOb]=tempMINUTIstato;
   INTERIlocali[DATOc]=luceMINUTIstato;
@@ -392,8 +397,8 @@ void ROU_CANTIc(){
   INTERIlocali[MESSnum]=CANTIc;
   // valori in memoria
   INTERIlocali[DATOa]=AGCdelay;
-  INTERIlocali[DATOb]=0;
-  INTERIlocali[DATOc]=0;
+  //INTERIlocali[DATOb]=0;
+  //INTERIlocali[DATOc]=0;
   //
   tx();
 }
@@ -427,7 +432,7 @@ void ROU_CANTIa(){
   //int temper=temperature;
   // valori in memoria
   INTERIlocali[DATOa]=analogRead(pin_light);
-  INTERIlocali[DATOb]=sensorVal;//temper;
+  INTERIlocali[DATOb]=centigradi(sensorVal);//temper;
   // stato rele A e B
   byte n=digitalRead(pin_releB);
   n = n<<1;
@@ -452,22 +457,15 @@ void ROU_CANTIa(){
 // sta nello stato corrente
 //
 void chkTemperatura(){
-  int sensorVal = analogRead(pin_temp);
-  float voltage = (sensorVal / 1024.0) * 5.0;
-  float temperature = (voltage - .5) * 10000;
-  tempVAL=temperature;
-  int diff=abs(tempVAL-tempVALpre);
-  // la differenza
-  // col valore precedente e' consistente
-  if (tempVAL > (tempVALpre+tempSOGLIA)){
+  int sensorTval = analogRead(pin_temp);
+  if (sensorTval > (sensorTvalPRE+tempSOGLIA)){
     tempSTA=SALITA;
-    tempVALpre=tempVAL;
-  } else {
-    if (tempVAL < (tempVALpre-tempSOGLIA)){
-      tempSTA=DISCESA;
-      tempVALpre=tempVAL;
-    }
+    sensorTvalPRE=sensorTval;
   }
+  if (sensorTval > (sensorTvalPRE+tempSOGLIA)){
+    tempSTA=SALITA;
+    sensorTvalPRE=sensorTval;
+  }  
   if (tempSTA==tempSTApre){
     // lo stato e' lo stesso di prima
     tempMINUTIstato++;
@@ -553,16 +551,16 @@ void EEPROMloadRele(){
 void EEPROMsave(){
   byte lsb;
   byte msb;
-  INTtoBYTE(tempSOGLIA,lsb,msb);
+  INTtoBYTES(tempSOGLIA,lsb,msb);
   EEPROM.write(EEPtempSogliaL,lsb);
   EEPROM.write(EEPtempSogliaM,msb);
-  INTtoBYTE(luceSOGLIAa,lsb,msb);
+  INTtoBYTES(luceSOGLIAa,lsb,msb);
   EEPROM.write(EEPluceSoglia_a_L,lsb);
   EEPROM.write(EEPluceSoglia_a_M,msb);
-  INTtoBYTE(luceSOGLIAb,lsb,msb);
+  INTtoBYTES(luceSOGLIAb,lsb,msb);
   EEPROM.write(EEPluceSoglia_b_L,lsb);
   EEPROM.write(EEPluceSoglia_b_M,msb);
-  INTtoBYTE(AGCdelay,lsb,msb);
+  INTtoBYTES(AGCdelay,lsb,msb);
   EEPROM.write(EEPagcDelayL,lsb);
   EEPROM.write(EEPagcDelayM,msb);
 }
@@ -576,16 +574,16 @@ void EEPROMload(){
   byte msb;
   lsb=EEPROM.read(EEPtempSogliaL);
   msb=EEPROM.read(EEPtempSogliaM);
-  tempSOGLIA=BYTEtoINT(lsb, msb);
+  tempSOGLIA=BYTEStoINT(lsb, msb);
   lsb=EEPROM.read(EEPluceSoglia_a_L);
   msb=EEPROM.read(EEPluceSoglia_a_M);
-  luceSOGLIAa=BYTEtoINT(lsb, msb);
+  luceSOGLIAa=BYTEStoINT(lsb, msb);
   lsb=EEPROM.read(EEPluceSoglia_b_L);
   msb=EEPROM.read(EEPluceSoglia_b_M);
-  luceSOGLIAb=BYTEtoINT(lsb, msb);
+  luceSOGLIAb=BYTEStoINT(lsb, msb);
   lsb=EEPROM.read(EEPagcDelayL);
   msb=EEPROM.read(EEPagcDelayM);
-  AGCdelay=BYTEtoINT(lsb, msb);
+  AGCdelay=BYTEStoINT(lsb, msb);
 }
 /*--------------------------------
 * DEFAULTload()
@@ -599,21 +597,21 @@ void DEFAULTload(){
   AGCdelay=agcDEF;
 }
 /*--------------------------------
-* INTtoBYTE()
+* INTtoBYTES()
 */
 // conversione da intero a due bytes
 //
-void INTtoBYTE(int x, byte& lsb, byte& msb){
+void INTtoBYTES(int x, byte& lsb, byte& msb){
   lsb =x & 0x00FF;
   x = x >> 8;
   msb = x & 0x00FF;
 }
 /*--------------------------------
-* BYTEtoINT()
+* BYTEStoINT()
 */
 // conversione da due byte ad un intero
 //
-int BYTEtoINT(byte& lsb, byte& msb){
+int BYTEStoINT(byte& lsb, byte& msb){
   int x;
   x = msb;
   x = x << 8;
@@ -676,7 +674,39 @@ void tx(){
   vw_rx_stop();
   vw_send((uint8_t *)BYTEradio,BYTEStoTX);
   vw_wait_tx();
-  vw_rx_start();
-  
-  
+  vw_rx_start();  
+}
+/*--------------------------------
+ * restituisce il valore di 
+ * temperatura in °C (x 10)
+ */
+int centigradi(int& valoreSensore){
+  //byte val[107]={75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181};
+  int temperatura[107]={-210,-205,-200,-190,-180,-175,-170,-160,-155,-150,\
+			-140,-130,-125,-120,-110,-100,-95,-90,-80,-75,-70,\
+			-60,-50,-45,-40,-30,-25,-20,-10,0,5,10,20,30,35,40,\
+			50,55,60,70,80,85,90,100,105,110,115,120,125,130,\
+			135,140,145,150,155,160,165,170,175,180,185,190,\
+			195,200,205,210,215,220,220,225,230,235,240,245,\
+			250,255,260,265,270,275,280,285,290,295,300,305,\
+			310,315,320,325,330,335,340,340,345,350,355,360,\
+			365,370,375,380,385,390,395,400,405};
+  if (valoresensore<75){
+    return -999;
+  } else {
+      if (valoresensore>181){
+	return 999;
+      } else {
+	byte posizione= valoresensore-75;
+	int TEMPER=temperatura[posizione];
+	return TEMPER;	
+      }
+  }
+  /* valori misurati sperimentalmente
+     75 ---> -21.3 C
+    118 --->  10   C
+    124 --->  13   C
+    125 --->  14   C
+    144 --->  22.5 C
+   */
 }
