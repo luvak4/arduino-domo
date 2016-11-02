@@ -78,27 +78,28 @@ const int pin_ir  =  2; // ir pin
 #define MASTRqq 120 // rele B OFF                      (CANTIa)
 #define MASTRrr 121 // rele B toggle                   (CANTIa)
 // interno
-#define MASTRaa 122 // ogni minuto MASTRa
-#define MASTRab 123 // disable ogni minuto MASTRa
-#define MASTRoo 124 // ogni minuto MASTRo
-#define MASTRop 125 // disable ogni minuto MASTRo
-#define MASTRdon 126 // enable invio a display
-#define MASTRdof 127 // disable invio a display
+#define MASTRaa 122    // ogni minuto MASTRa
+#define MASTRab 123    // disable ogni minuto MASTRa
+#define MASTRoo 124    // ogni minuto MASTRo
+#define MASTRop 125    // disable ogni minuto MASTRo
+#define MASTRdon 126   // enable invio a display
+#define MASTRdof 127   // disable invio a display
 #define MASTRclear 130 // clear display
 // caldaia
-#define MASTCa 150 // leggi tempo led A/B/C
-#define MASTCb 151 // leggi tempo led D
-#define MASTCc 152 // get stato leds
+#define MASTCa 150     // leggi tempo led A/B/C        (CALDAa)
+#define MASTCb 151     // leggi tempo led D            (CALDAb)
+#define MASTCc 152     // get stato leds               (CALDAc)
 // pfsense
-#define MASTSa 200 // move servoA (push button)
-#define MASTSb 201 // move servoB (push button)
-#define MASTSa 202 // get stato leds servoA and servoB
-#define MASTPa 250 // get stato leds pfSense
-#define MASTPb 251 // shutdown pfSense
-#define MASTPc 252 // reboot pfSense
+#define MASTSa 200     // move servoA (push button)    (SERVOa)
+#define MASTSb 201     // move servoB (push button)    (SERVOb)
+#define MASTSc 202     // get stato leds servoA and B  (SERVOc)
+#define MASTPa 250     // get stato leds pfSense       (PFSENa)
+#define MASTPb 251     // shutdown pfSense             (PFSENb)
+#define MASTPc 252     // reboot pfSense               (PFSENc)
 /*--------------------------------
 ** risposte (IN)
 */
+// cantina
 #define CANTIa   1000 // get value luce/temp/rele
 #define CANTIb   1001 // get soglie luce/temp
 #define CANTIc   1002 // get AGC 
@@ -106,12 +107,15 @@ const int pin_ir  =  2; // ir pin
 #define CANTIokA 1004 // get ok salva eprom
 #define CANTIokB 1005 // get ok carica eprom
 #define CANTIokC 1006 // get ok carica default
+// caldaia
 #define CALDAa   1010 // get tempo led A/B/C
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
+// servo
 #define SERVOa   1013 // ok pushbutton A
 #define SERVOb   1014 // ok pushbutton B
 #define SERVOc   1015 // get stato leds servoA and servoB
+// pfsense
 #define PFSENa   1016 // get status of leds
 #define PFSENb   1017 // ok shutdown
 #define PFSENc   1018 // ok reboot
@@ -119,9 +123,9 @@ const int pin_ir  =  2; // ir pin
 /*--------------------------------
 ** radio tx rx
 */
-byte CIFR[]={223,205,228,240,43,146,241,//
-	     87,213,48,235,131,6,81,26,//
-	     70,34,74,224,27,111,150,22,//
+byte CIFR[]={223,205,228,240,43,146,241,\
+	     87,213,48,235,131,6,81,26,\
+	     70,34,74,224,27,111,150,22,\
 	     138,239,200,179,222,231,212};
 #define mask       0x00FF
 #define VELOCITAstd   500   // velocita standard
@@ -421,16 +425,6 @@ void scorriNumero(byte aggiungi){
   stampaNc();
 }
 /*--------------------------------
-* INTtoBYTE()
-*/
-// conversione da intero a due bytes
-//
-void INTtoBYTE(int x, byte& lsb, byte& msb){
-  lsb =x & 0x00FF;
-  x = x >> 8;
-  msb = x & 0x00FF;
-}
-/*--------------------------------
  * decodeMessage()
  */
 // RADIO -> locale
@@ -446,8 +440,8 @@ void decodeMessage(){
   }
 }
 /*--------------------------------
- * encodeMessage()
- */
+* encodeMessage()
+*/
 // locale -> RADIO
 //
 void encodeMessage(){
@@ -461,8 +455,8 @@ void encodeMessage(){
   cipher();
 }
 /*--------------------------------
- * cipher()
- */
+* cipher()
+*/
 // cifratura XOR del messaggio
 //
 void cipher(){
@@ -471,9 +465,10 @@ void cipher(){
   }
 }
 /*--------------------------------
- * tx()
- */
+* tx()
+*/
 void tx(){
+  // radio tx
   encodeMessage();
   vw_rx_stop();
   vw_send((uint8_t *)BYTEradio,BYTEStoTX);
@@ -481,173 +476,215 @@ void tx(){
   vw_rx_start(); 
   // attende al massimo 3 secondi per una risposta
   if (vw_wait_rx_max(maxWAITresponse)){
-    /*--------------------------------
-    ** radio rx
-    */
+    // radio rx
     if (vw_get_message(BYTEradio, &buflen)){
       char buf[20];
       //
       vw_rx_stop();
       //
       decodeMessage();
+      //
       //ritrasmette();
+      //     
       if (DISPLAYenable){
-	switch (INTERIlocali[MESSnum]){
-	  case CALDAa:
-	    clearDISPLAY();
-	    CARATTERI = "STATO CALDAIA (" + String(CALDAa) + ")";
-	    txDISPLAY(0,0);
-	    //            12345678901234567890
-	    sprintf(buf,"minuti TERMO : %4d",INTERIlocali[DATOa]);
-	    CARATTERI=String(buf);
-	    txDISPLAY(0,1);
-	    //            12345678901234567890
-	    sprintf(buf,"minuti ACQUA : %4d",INTERIlocali[DATOb]);
-	    CARATTERI=String(buf);
-	    txDISPLAY(0,2);
-	    //            12345678901234567890
-	    sprintf(buf,"minuti FIAMMA: %4d",INTERIlocali[DATOc]);
-	    CARATTERI=String(buf);
-	    txDISPLAY(0,3);	    	    
-	    break;
-	  case CALDAb:
-	    clearDISPLAY();
-	    CARATTERI = "STATO CALDAIA (" + String(CALDAb) + ")";
-	    txDISPLAY(0,0);
-	    sprintf(buf,"minuti ON: %4d",INTERIlocali[DATOa]);
-	    CARATTERI=String(buf);
-	    txDISPLAY(0,1);
-	    break;
-	  case CALDAc:
-	    clearDISPLAY();
-	    CARATTERI = "STATO CALDAIA (" + String(CALDAc) + ")";
-	    txDISPLAY(0,0);
-	    CARATTERI = "TERMO : " +  getONorFF(INTERIlocali[DATOa]&1);
-	    txDISPLAY(0,1);
-	    CARATTERI = "ACQUA : " +  getONorFF(INTERIlocali[DATOa]&2);
-	    txDISPLAY(0,2);	    
-	    CARATTERI = "FIAMMA: " +  getONorFF(INTERIlocali[DATOa]&4);
-	    txDISPLAY(0,3);	    
-	    CARATTERI = "caldaia: " +  getONorFF(INTERIlocali[DATOa]&8);
-	    txDISPLAY(9,3);	    
-	    break;
-	  case CANTIokA:
-	    clearDISPLAY();
-	    CARATTERI =  "DIGITAL-A (" + String(CANTIokA) + ")";
-	    txDISPLAY(0,0);	    
-	    CARATTERI = "OK salva su EEPROM";
-	    txDISPLAY(0,1);	    
-	    break;
-	  case CANTIokB:
-	    clearDISPLAY();
-	    CARATTERI = "DIGITAL-A (" + String(CANTIokB) + ")";
-	    txDISPLAY(0,0);	    
-	    CARATTERI = "OK carica da EEPROM";
-	    txDISPLAY(0,1);	    	    
-	    break;
-	  case CANTIokC:
-	    clearDISPLAY();
-	    CARATTERI = "DIGITAL-A (" + String(CANTIokC) + ")";
-	    txDISPLAY(0,0);	    
-	    CARATTERI = "OK carica default";
-	    txDISPLAY(0,1);	    	    	    
-	    break;    
-	  case CANTIa:
-	    clearDISPLAY();
-	    CARATTERI =  "DIGITAL-A (" + String(CANTIa) + ")";
-	    txDISPLAY(0,0);
-	    CARATTERI = "TEMP:" + String(INTERIlocali[DATOb]);
-	    txDISPLAY(0,1);
-	    CARATTERI = "LUCE:" + String(INTERIlocali[DATOa]);
-	    txDISPLAY(11,1);
-	    CARATTERI = "relA:" +  getONorFF(INTERIlocali[DATOc]&1);
-	    txDISPLAY(0,3);
-	    CARATTERI = "relB:" +  getONorFF(INTERIlocali[DATOc]&2);
-	    txDISPLAY(11,3);
-	    break;
-	  case CANTIb:
-	    clearDISPLAY();
-	    CARATTERI =  "DIGITAL-A (" + String(CANTIb) + ")";
-	    txDISPLAY(0,0);
-	    CARATTERI = "soglia TEMP: " + String(INTERIlocali[DATOa]);
-	    txDISPLAY(0,1);
-	    CARATTERI = "soglia 'A' LUCE: " + String(INTERIlocali[DATOb]);
-	    txDISPLAY(0,2);
-	    CARATTERI = "soglia 'B' LUCE: " + String(INTERIlocali[DATOc]);
-	    txDISPLAY(0,3);
-	    break;
-	  case CANTIc:
-	    clearDISPLAY();
-	    CARATTERI =  "DIGITAL-A (" + String(CANTIc) + ")";
-	    txDISPLAY(0,0);
-	    CARATTERI = "delay AGC: " + String(INTERIlocali[DATOa]);
-	    txDISPLAY(0,1);
-	    break;
-	  case CANTId:
-	    clearDISPLAY();
-	    CARATTERI =  "DIGITAL-A (" + String(CANTId) + ")";
-	    txDISPLAY(0,0);   
-	    byte stLuce=INTERIlocali[DATOa] & 0x00FF;
-	    CARATTERI="stato LUCE: ";
-	    switch (stLuce){
-	    case LUCEpoca:
-	      CARATTERI+="poca";
-	      break;
-	    case LUCEmedia:
-	      CARATTERI+="media";
-	      break;
-	    case LUCEtanta:
-	      CARATTERI+="tanta";
-	      break;	      	      
-	    }
-	    txDISPLAY(0,1);	    
-	    //
-	    INTERIlocali[DATOa]=INTERIlocali[DATOa] >> 8;	    
-	    byte stTemp=INTERIlocali[DATOa] & 0x00FF;	    
-	    CARATTERI="stato TEMP: ";
-	    switch (stTemp){
-	    case SALITA:
-	      CARATTERI+="salita";
-	      break;
-	    case DISCESA:
-	      CARATTERI+="discesa";
-	      break;	      
-	    }
-	    txDISPLAY(0,2);
-	    //
-	    CARATTERI="min T: " +String(INTERIlocali[DATOb]);
-	    CARATTERI+=" L: " +String(INTERIlocali[DATOc]);
-	    txDISPLAY(0,3);
-	    break;
-	  }
+	// controlla la risposta se adeguata alla
+	// domanda e visualizza il risultato su display
+	controllaRisposta();
       }
       //
       vw_rx_start();
       //
     } 
-    //CARATTERI = "  ";
-    //txDISPLAY(0,0); 
-  } else {
-    //clearDISPLAY();
-    //CARATTERI = "<nessuna risposta>";
-    //txDISPLAY(0,0); 
   }
 }
 /*--------------------------------
 ** clearDISPLAY()
 */
 void clearDISPLAY(){
-CARATTERI = "<clear>";
-txDISPLAY(0,0);     
-//txDISPLAY(0,1);     
-//txDISPLAY(0,2);   
-//txDISPLAY(0,3);  
+  CARATTERI = "<clear>";
+  txDISPLAY(0,0);     
 }
-
+/*--------------------------------
+** getONorFF()
+*/
 String getONorFF(byte value){
   if (value){
     return "ON";
   } else {
     return "off";
+  }
+}
+/*--------------------------------
+** controllaRisposta()
+*/
+void controllaRisposta(){
+  if ((BYTEradio[MESSnum]==MASTRa) ||\
+      (BYTEradio[MESSnum]==MASTRp) ||\
+      (BYTEradio[MESSnum]==MASTRq) ||\
+      (BYTEradio[MESSnum]==MASTRr) ||\
+      (BYTEradio[MESSnum]==MASTRpp)||\
+      (BYTEradio[MESSnum]==MASTRqq)||\
+      (BYTEradio[MESSnum]==MASTRrr)){
+    if (INTERIlocali[MESSnum]==CANTIa){
+      clearDISPLAY();
+      CARATTERI =  "DIGITAL-A (" + String(CANTIa) + ")";
+      txDISPLAY(0,0);
+      CARATTERI = "TEMP:" + String(INTERIlocali[DATOb]);
+      txDISPLAY(0,1);
+      CARATTERI = "LUCE:" + String(INTERIlocali[DATOa]);
+      txDISPLAY(11,1);
+      CARATTERI = "relA:" +  getONorFF(INTERIlocali[DATOc]&1);
+      txDISPLAY(0,3);
+      CARATTERI = "relB:" +  getONorFF(INTERIlocali[DATOc]&2);
+      txDISPLAY(11,3);
+    }
+  }
+  //--------------------------------
+  if ((BYTEradio[MESSnum]==MASTRb)||\
+      (BYTEradio[MESSnum]==MASTRc)||\
+      (BYTEradio[MESSnum]==MASTRd)||\
+      (BYTEradio[MESSnum]==MASTRe)||\
+      (BYTEradio[MESSnum]==MASTRf)||\
+      (BYTEradio[MESSnum]==MASTRg)||\
+      (BYTEradio[MESSnum]==MASTRh)){
+    if (INTERIlocali[MESSnum]==CANTIb){
+      clearDISPLAY();
+      CARATTERI =  "DIGITAL-A (" + String(CANTIb) + ")";
+      txDISPLAY(0,0);
+      CARATTERI = "soglia TEMP: " + String(INTERIlocali[DATOa]);
+      txDISPLAY(0,1);
+      CARATTERI = "soglia 'A' LUCE: " + String(INTERIlocali[DATOb]);
+      txDISPLAY(0,2);
+      CARATTERI = "soglia 'B' LUCE: " + String(INTERIlocali[DATOc]);
+      txDISPLAY(0,3);	    
+    }
+  }
+  //--------------------------------
+  if ((BYTEradio[MESSnum]==MASTRi)||\
+      (BYTEradio[MESSnum]==MASTRj)||\
+      (BYTEradio[MESSnum]==MASTRk)){
+    if (INTERIlocali[MESSnum]==CANTIc){
+      clearDISPLAY();
+      CARATTERI =  "DIGITAL-A (" + String(CANTIc) + ")";
+      txDISPLAY(0,0);
+      CARATTERI = "delay AGC: " + String(INTERIlocali[DATOa]);
+      txDISPLAY(0,1);	    
+    }
+  }	
+  //--------------------------------
+  if (BYTEradio[MESSnum]==MASTRl){
+    if (INTERIlocali[MESSnum]==CANTIokA){
+      clearDISPLAY();
+      CARATTERI =  "DIGITAL-A (" + String(CANTIokA) + ")";
+      txDISPLAY(0,0);	    
+      CARATTERI = "OK salva su EEPROM";
+      txDISPLAY(0,1);	    	    
+    }
+  }    
+  //--------------------------------
+  if (BYTEradio[MESSnum]==MASTRm){
+    if (INTERIlocali[MESSnum]==CANTIokB){
+      clearDISPLAY();
+      CARATTERI = "DIGITAL-A (" + String(CANTIokB) + ")";
+      txDISPLAY(0,0);	    
+      CARATTERI = "OK carica da EEPROM";
+      txDISPLAY(0,1);	    	    	    
+    }
+  }
+  //--------------------------------
+  if (BYTEradio[MESSnum]==MASTRn){
+    if (INTERIlocali[MESSnum]==CANTIokC){
+      clearDISPLAY();
+      CARATTERI = "DIGITAL-A (" + String(CANTIokC) + ")";
+      txDISPLAY(0,0);	    
+      CARATTERI = "OK carica default";
+      txDISPLAY(0,1);
+    }
+  }
+  //--------------------------------
+  if (BYTEradio[MESSnum]==MASTRo){
+    if (INTERIlocali[MESSnum]==CANTId){
+      clearDISPLAY();
+      CARATTERI =  "DIGITAL-A (" + String(CANTId) + ")";
+      txDISPLAY(0,0);   
+      byte stLuce=INTERIlocali[DATOa] & 0x00FF;
+      CARATTERI="stato LUCE: ";
+      switch (stLuce){
+      case LUCEpoca:
+	CARATTERI+="poca";
+	break;
+      case LUCEmedia:
+	CARATTERI+="media";
+	break;
+      case LUCEtanta:
+	CARATTERI+="tanta";
+	break;	      	      
+      }
+      txDISPLAY(0,1);	    
+      //
+      INTERIlocali[DATOa]=INTERIlocali[DATOa] >> 8;	    
+      byte stTemp=INTERIlocali[DATOa] & 0x00FF;	    
+      CARATTERI="stato TEMP: ";
+      switch (stTemp){
+      case SALITA:
+	CARATTERI+="salita";
+	break;
+      case DISCESA:
+	CARATTERI+="discesa";
+	break;	      
+      }
+      txDISPLAY(0,2);
+      //
+      CARATTERI="min T: " +String(INTERIlocali[DATOb]);
+      CARATTERI+=" L: " +String(INTERIlocali[DATOc]);
+      txDISPLAY(0,3);	    
+    }
+  }	  
+  //--------------------------------
+  if (BYTEradio[MESSnum]==MASTCa){
+    if (INTERIlocali[MESSnum]==CALDAa){
+      clearDISPLAY();
+      CARATTERI = "STATO CALDAIA (" + String(CALDAa) + ")";
+      txDISPLAY(0,0);
+      //            12345678901234567890
+      sprintf(buf,"minuti TERMO : %4d",INTERIlocali[DATOa]);
+      CARATTERI=String(buf);
+      txDISPLAY(0,1);
+      //            12345678901234567890
+      sprintf(buf,"minuti ACQUA : %4d",INTERIlocali[DATOb]);
+      CARATTERI=String(buf);
+      txDISPLAY(0,2);
+      //            12345678901234567890
+      sprintf(buf,"minuti FIAMMA: %4d",INTERIlocali[DATOc]);
+      CARATTERI=String(buf);
+      txDISPLAY(0,3);	    	        	    	    
+    }
+  }
+  //--------------------------------
+  if (BYTEradio[MESSnum]==MASTCb){
+    if (INTERIlocali[MESSnum]==CALDAb){
+      clearDISPLAY();
+      CARATTERI = "STATO CALDAIA (" + String(CALDAb) + ")";
+      txDISPLAY(0,0);
+      sprintf(buf,"minuti ON: %4d",INTERIlocali[DATOa]);
+      CARATTERI=String(buf);
+      txDISPLAY(0,1);	    
+    }
+  }
+  //--------------------------------
+  if (BYTEradio[MESSnum]==MASTCc){
+    if (INTERIlocali[MESSnum]==CALDAc){
+      clearDISPLAY();
+      CARATTERI = "STATO CALDAIA (" + String(CALDAc) + ")";
+      txDISPLAY(0,0);
+      CARATTERI = "TERMO : " +  getONorFF(INTERIlocali[DATOa]&1);
+      txDISPLAY(0,1);
+      CARATTERI = "ACQUA : " +  getONorFF(INTERIlocali[DATOa]&2);
+      txDISPLAY(0,2);	    
+      CARATTERI = "FIAMMA: " +  getONorFF(INTERIlocali[DATOa]&4);
+      txDISPLAY(0,3);	    
+      CARATTERI = "caldaia: " +  getONorFF(INTERIlocali[DATOa]&8);
+      txDISPLAY(9,3);
+    }
   }
 }
