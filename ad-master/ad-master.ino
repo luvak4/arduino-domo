@@ -231,6 +231,7 @@ void setup()
   DISPLAYenable=true;//EEPROM.read(eepDISPLAY);
   autoMASTRa=false;//EEPROM.read(eepMASTRa);
   autoMASTRo=false;//EEPROM.read(eepMASTRo);
+  //Serial.begin(9600);
 }
 //
 /*--------------------------------
@@ -468,6 +469,7 @@ void cipher(){
 * tx()
 */
 void tx(){
+  int numMsgTxd=INTERIlocali[MESSnum];
   // radio tx
   encodeMessage();
   vw_rx_stop();
@@ -478,7 +480,7 @@ void tx(){
   if (vw_wait_rx_max(maxWAITresponse)){
     // radio rx
     if (vw_get_message(BYTEradio, &buflen)){
-      char buf[20];
+
       //
       vw_rx_stop();
       //
@@ -489,7 +491,7 @@ void tx(){
       if (DISPLAYenable){
 	// controlla la risposta se adeguata alla
 	// domanda e visualizza il risultato su display
-	controllaRisposta();
+	controllaRisposta(numMsgTxd);
       }
       //
       vw_rx_start();
@@ -517,14 +519,16 @@ String getONorFF(byte value){
 /*--------------------------------
 ** controllaRisposta()
 */
-void controllaRisposta(){
-  if ((BYTEradio[MESSnum]==MASTRa) ||\
-      (BYTEradio[MESSnum]==MASTRp) ||\
-      (BYTEradio[MESSnum]==MASTRq) ||\
-      (BYTEradio[MESSnum]==MASTRr) ||\
-      (BYTEradio[MESSnum]==MASTRpp)||\
-      (BYTEradio[MESSnum]==MASTRqq)||\
-      (BYTEradio[MESSnum]==MASTRrr)){
+void controllaRisposta(int& numMsg){
+        char buf[20];
+        
+  if ((numMsg==MASTRa) ||\
+      (numMsg==MASTRp) ||\
+      (numMsg==MASTRq) ||\
+      (numMsg==MASTRr) ||\
+      (numMsg==MASTRpp)||\
+      (numMsg==MASTRqq)||\
+      (numMsg==MASTRrr)){
     if (INTERIlocali[MESSnum]==CANTIa){
       clearDISPLAY();
       CARATTERI =  "DIGITAL-A (" + String(CANTIa) + ")";
@@ -540,13 +544,13 @@ void controllaRisposta(){
     }
   }
   //--------------------------------
-  if ((BYTEradio[MESSnum]==MASTRb)||\
-      (BYTEradio[MESSnum]==MASTRc)||\
-      (BYTEradio[MESSnum]==MASTRd)||\
-      (BYTEradio[MESSnum]==MASTRe)||\
-      (BYTEradio[MESSnum]==MASTRf)||\
-      (BYTEradio[MESSnum]==MASTRg)||\
-      (BYTEradio[MESSnum]==MASTRh)){
+  if ((numMsg==MASTRb)||\
+      (numMsg==MASTRc)||\
+      (numMsg==MASTRd)||\
+      (numMsg==MASTRe)||\
+      (numMsg==MASTRf)||\
+      (numMsg==MASTRg)||\
+      (numMsg==MASTRh)){
     if (INTERIlocali[MESSnum]==CANTIb){
       clearDISPLAY();
       CARATTERI =  "DIGITAL-A (" + String(CANTIb) + ")";
@@ -560,9 +564,9 @@ void controllaRisposta(){
     }
   }
   //--------------------------------
-  if ((BYTEradio[MESSnum]==MASTRi)||\
-      (BYTEradio[MESSnum]==MASTRj)||\
-      (BYTEradio[MESSnum]==MASTRk)){
+  if ((numMsg==MASTRi)||\
+      (numMsg==MASTRj)||\
+      (numMsg==MASTRk)){
     if (INTERIlocali[MESSnum]==CANTIc){
       clearDISPLAY();
       CARATTERI =  "DIGITAL-A (" + String(CANTIc) + ")";
@@ -572,7 +576,7 @@ void controllaRisposta(){
     }
   }	
   //--------------------------------
-  if (BYTEradio[MESSnum]==MASTRl){
+  if (numMsg==MASTRl){
     if (INTERIlocali[MESSnum]==CANTIokA){
       clearDISPLAY();
       CARATTERI =  "DIGITAL-A (" + String(CANTIokA) + ")";
@@ -582,7 +586,7 @@ void controllaRisposta(){
     }
   }    
   //--------------------------------
-  if (BYTEradio[MESSnum]==MASTRm){
+  if (numMsg==MASTRm){
     if (INTERIlocali[MESSnum]==CANTIokB){
       clearDISPLAY();
       CARATTERI = "DIGITAL-A (" + String(CANTIokB) + ")";
@@ -592,7 +596,7 @@ void controllaRisposta(){
     }
   }
   //--------------------------------
-  if (BYTEradio[MESSnum]==MASTRn){
+  if (numMsg==MASTRn){
     if (INTERIlocali[MESSnum]==CANTIokC){
       clearDISPLAY();
       CARATTERI = "DIGITAL-A (" + String(CANTIokC) + ")";
@@ -602,7 +606,7 @@ void controllaRisposta(){
     }
   }
   //--------------------------------
-  if (BYTEradio[MESSnum]==MASTRo){
+  if (numMsg==MASTRo){
     if (INTERIlocali[MESSnum]==CANTId){
       clearDISPLAY();
       CARATTERI =  "DIGITAL-A (" + String(CANTId) + ")";
@@ -641,27 +645,24 @@ void controllaRisposta(){
     }
   }	  
   //--------------------------------
-  if (BYTEradio[MESSnum]==MASTCa){
+  if (numMsg==MASTCa){
     if (INTERIlocali[MESSnum]==CALDAa){
       clearDISPLAY();
       CARATTERI = "STATO CALDAIA (" + String(CALDAa) + ")";
       txDISPLAY(0,0);
-      //            12345678901234567890
-      sprintf(buf,"minuti TERMO : %4d",INTERIlocali[DATOa]);
-      CARATTERI=String(buf);
+      //sprintf(buf,"minuti FIAMMA : %4d",INTERIlocali[DATOa]);
+      CARATTERI="minuti FIAMMA: "+String(INTERIlocali[DATOa]);
       txDISPLAY(0,1);
-      //            12345678901234567890
-      sprintf(buf,"minuti ACQUA : %4d",INTERIlocali[DATOb]);
-      CARATTERI=String(buf);
+      //sprintf(buf,"minuti TERMO  : %4d",INTERIlocali[DATOb]);
+      CARATTERI="minuti TERMO : "+String(INTERIlocali[DATOb]);
       txDISPLAY(0,2);
-      //            12345678901234567890
-      sprintf(buf,"minuti FIAMMA: %4d",INTERIlocali[DATOc]);
-      CARATTERI=String(buf);
+      //sprintf(buf,"minuti ACQUA: %4d",INTERIlocali[DATOc]);
+      CARATTERI="minuti ACQUA : "+String(INTERIlocali[DATOc]);
       txDISPLAY(0,3);	    	        	    	    
     }
   }
   //--------------------------------
-  if (BYTEradio[MESSnum]==MASTCb){
+  if (numMsg==MASTCb){
     if (INTERIlocali[MESSnum]==CALDAb){
       clearDISPLAY();
       CARATTERI = "STATO CALDAIA (" + String(CALDAb) + ")";
@@ -672,19 +673,19 @@ void controllaRisposta(){
     }
   }
   //--------------------------------
-  if (BYTEradio[MESSnum]==MASTCc){
+  if (numMsg==MASTCc){
     if (INTERIlocali[MESSnum]==CALDAc){
       clearDISPLAY();
       CARATTERI = "STATO CALDAIA (" + String(CALDAc) + ")";
       txDISPLAY(0,0);
-      CARATTERI = "TERMO : " +  getONorFF(INTERIlocali[DATOa]&1);
+      CARATTERI = "TERMO : " +  getONorFF(INTERIlocali[DATOa]&2);
       txDISPLAY(0,1);
-      CARATTERI = "ACQUA : " +  getONorFF(INTERIlocali[DATOa]&2);
+      CARATTERI = "ACQUA : " +  getONorFF(INTERIlocali[DATOa]&4);
       txDISPLAY(0,2);	    
-      CARATTERI = "FIAMMA: " +  getONorFF(INTERIlocali[DATOa]&4);
+      CARATTERI = "FIAMMA: " +  getONorFF(INTERIlocali[DATOa]&1);
       txDISPLAY(0,3);	    
-      CARATTERI = "caldaia: " +  getONorFF(INTERIlocali[DATOa]&8);
-      txDISPLAY(9,3);
+      CARATTERI = "acc: " +  getONorFF(INTERIlocali[DATOa]&8);
+      txDISPLAY(12,3);
     }
   }
 }
