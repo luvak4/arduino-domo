@@ -89,6 +89,8 @@ const int pin_ir  =  2; // ir pin
 #define MASTCa 150     // leggi tempo led A/B/C        (CALDAa)
 #define MASTCb 151     // leggi tempo led D            (CALDAb)
 #define MASTCc 152     // get stato leds               (CALDAc)
+#define MASTCd 153     // tempo led ABC ieri
+#define MASTCz 190     // set giorno 0
 // pfsense
 #define MASTSa 200     // move servoA (push button)    (SERVOa)
 #define MASTSb 201     // move servoB (push button)    (SERVOb)
@@ -111,6 +113,8 @@ const int pin_ir  =  2; // ir pin
 #define CALDAa   1010 // get tempo led A/B/C
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
+#define CALDAd   1013 // get tempo led ABC ieri
+#define CALDAz   1020 // ok: set giorno 0
 // servo
 #define SERVOa   1013 // ok pushbutton A
 #define SERVOb   1014 // ok pushbutton B
@@ -476,27 +480,22 @@ void tx(){
   vw_send((uint8_t *)BYTEradio,BYTEStoTX);
   vw_wait_tx();
   vw_rx_start(); 
-  // attende al massimo 3 secondi per una risposta
+  // attende al massimo qualche secondo per una risposta
   if (vw_wait_rx_max(maxWAITresponse)){
     // radio rx
     if (vw_get_message(BYTEradio, &buflen)){
-
-      //
       vw_rx_stop();
-      //
       decodeMessage();
-      //
       //ritrasmette();
-      //     
       if (DISPLAYenable){
 	// controlla la risposta se adeguata alla
 	// domanda e visualizza il risultato su display
 	controllaRisposta(numMsgTxd);
       }
-      //
       vw_rx_start();
-      //
     } 
+  } else {    
+    clearDISPLAY();    
   }
 }
 /*--------------------------------
@@ -520,8 +519,7 @@ String getONorFF(byte value){
 ** controllaRisposta()
 */
 void controllaRisposta(int& numMsg){
-        char buf[20];
-        
+  char buf[20];        
   if ((numMsg==MASTRa) ||\
       (numMsg==MASTRp) ||\
       (numMsg==MASTRq) ||\
@@ -531,7 +529,7 @@ void controllaRisposta(int& numMsg){
       (numMsg==MASTRrr)){
     if (INTERIlocali[MESSnum]==CANTIa){
       clearDISPLAY();
-      CARATTERI =  "DIGITAL-A (" + String(CANTIa) + ")";
+      CARATTERI =  "DIGITAL-A (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);
       CARATTERI = "TEMP:" + String(INTERIlocali[DATOb]);
       txDISPLAY(0,1);
@@ -553,7 +551,7 @@ void controllaRisposta(int& numMsg){
       (numMsg==MASTRh)){
     if (INTERIlocali[MESSnum]==CANTIb){
       clearDISPLAY();
-      CARATTERI =  "DIGITAL-A (" + String(CANTIb) + ")";
+      CARATTERI =  "DIGITAL-A (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);
       CARATTERI = "soglia TEMP: " + String(INTERIlocali[DATOa]);
       txDISPLAY(0,1);
@@ -569,7 +567,7 @@ void controllaRisposta(int& numMsg){
       (numMsg==MASTRk)){
     if (INTERIlocali[MESSnum]==CANTIc){
       clearDISPLAY();
-      CARATTERI =  "DIGITAL-A (" + String(CANTIc) + ")";
+      CARATTERI =  "DIGITAL-A (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);
       CARATTERI = "delay AGC: " + String(INTERIlocali[DATOa]);
       txDISPLAY(0,1);	    
@@ -579,7 +577,7 @@ void controllaRisposta(int& numMsg){
   if (numMsg==MASTRl){
     if (INTERIlocali[MESSnum]==CANTIokA){
       clearDISPLAY();
-      CARATTERI =  "DIGITAL-A (" + String(CANTIokA) + ")";
+      CARATTERI =  "DIGITAL-A (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);	    
       CARATTERI = "OK salva su EEPROM";
       txDISPLAY(0,1);	    	    
@@ -589,7 +587,7 @@ void controllaRisposta(int& numMsg){
   if (numMsg==MASTRm){
     if (INTERIlocali[MESSnum]==CANTIokB){
       clearDISPLAY();
-      CARATTERI = "DIGITAL-A (" + String(CANTIokB) + ")";
+      CARATTERI = "DIGITAL-A (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);	    
       CARATTERI = "OK carica da EEPROM";
       txDISPLAY(0,1);	    	    	    
@@ -599,7 +597,7 @@ void controllaRisposta(int& numMsg){
   if (numMsg==MASTRn){
     if (INTERIlocali[MESSnum]==CANTIokC){
       clearDISPLAY();
-      CARATTERI = "DIGITAL-A (" + String(CANTIokC) + ")";
+      CARATTERI = "DIGITAL-A (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);	    
       CARATTERI = "OK carica default";
       txDISPLAY(0,1);
@@ -609,7 +607,7 @@ void controllaRisposta(int& numMsg){
   if (numMsg==MASTRo){
     if (INTERIlocali[MESSnum]==CANTId){
       clearDISPLAY();
-      CARATTERI =  "DIGITAL-A (" + String(CANTId) + ")";
+      CARATTERI =  "DIGITAL-A (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);   
       byte stLuce=INTERIlocali[DATOa] & 0x00FF;
       CARATTERI="stato LUCE: ";
@@ -648,7 +646,7 @@ void controllaRisposta(int& numMsg){
   if (numMsg==MASTCa){
     if (INTERIlocali[MESSnum]==CALDAa){
       clearDISPLAY();
-      CARATTERI = "STATO CALDAIA (" + String(CALDAa) + ")";
+      CARATTERI = "STATO CALDAIA (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);
       //sprintf(buf,"minuti FIAMMA : %4d",INTERIlocali[DATOa]);
       CARATTERI="minuti FIAMMA: "+String(INTERIlocali[DATOa]);
@@ -665,7 +663,7 @@ void controllaRisposta(int& numMsg){
   if (numMsg==MASTCb){
     if (INTERIlocali[MESSnum]==CALDAb){
       clearDISPLAY();
-      CARATTERI = "STATO CALDAIA (" + String(CALDAb) + ")";
+      CARATTERI = "STATO CALDAIA (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);
       sprintf(buf,"minuti ON: %4d",INTERIlocali[DATOa]);
       CARATTERI=String(buf);
@@ -676,7 +674,7 @@ void controllaRisposta(int& numMsg){
   if (numMsg==MASTCc){
     if (INTERIlocali[MESSnum]==CALDAc){
       clearDISPLAY();
-      CARATTERI = "STATO CALDAIA (" + String(CALDAc) + ")";
+      CARATTERI = "STATO CALDAIA (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);
       CARATTERI = "TERMO : " +  getONorFF(INTERIlocali[DATOa]&2);
       txDISPLAY(0,1);
@@ -688,4 +686,27 @@ void controllaRisposta(int& numMsg){
       txDISPLAY(12,3);
     }
   }
+  //--------------------------------
+  if (numMsg==MASTCd){
+    if (INTERIlocali[MESSnum]==CALDAd){
+      clearDISPLAY();
+      CARATTERI = "CALDAIA IERI (" + String(INTERIlocali[MESSnum]) + ")";
+      txDISPLAY(0,0);
+      CARATTERI="minuti FIAMMA: "+String(INTERIlocali[DATOa]);
+      txDISPLAY(0,1);
+      CARATTERI="minuti TERMO : "+String(INTERIlocali[DATOb]);
+      txDISPLAY(0,2);
+      CARATTERI="minuti ACQUA : "+String(INTERIlocali[DATOc]);
+      txDISPLAY(0,3);	    	        	    	          
+    }
+  }
+  //--------------------------------
+  if (numMsg==MASTCz){
+    if (INTERIlocali[MESSnum]==CALDAz){
+      clearDISPLAY();
+      //           12345678901234567890
+      CARATTERI = "ok set Gzero (" + String(INTERIlocali[MESSnum]) + ")";
+      txDISPLAY(0,0);
+    }
+  }  
 }
