@@ -11,6 +11,24 @@
 * configurazioni
 */
 #include <VirtualWire.h>
+#include <EEPROM.h>
+// indirizzo di memoria EEPROM che
+// contiene l'ultimo indirizzo usato
+// all'inizio del secondo giorno
+// contiene il valore 4 (1=fiamma, 2=termo,
+// 3=acqua, 4=interruttore);
+// all'inizio del terzo giorno contiene 8
+// (5=fiamma, 6=termo, 7=acqua, 8=interruttore)
+// e cos� via.
+// i dati del giorno 'n' si recuperano agli
+// indirizzi:
+// n*4-3 = fiamma
+// n*4-2 = termo
+// n*4-1 = acqua
+// n*4   = interruttore
+#define eepromLASTADDRESSused 0 
+                        
+
 /*--------------------------------
 ** pins
 */
@@ -26,12 +44,16 @@
 #define MASTCa 150 // leggi tempo led A/B/C
 #define MASTCb 151 // leggi tempo led D
 #define MASTCc 152 // get stato leds
+#define MASTCd 153 // tempo led ABC ieri
+#define MASTCz 190 // set giorno 0
 /*--------------------------------
 ** risposte (OUT)
 */
 #define CALDAa   1010 // get tempo led A/B/C
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
+#define CALDAd   1013 // get tempo led ABC ieri
+#define CALDAz   1020 // ok: set giorno 0
 /*--------------------------------
 ** radio tx rx
 */
@@ -87,31 +109,43 @@ void setup() {
 * loop()
 */
 void loop(){
+  int eepADDR;
+  byte n=0;
 /*--------------------------------
 ** tieni il tempo
 */
   if ((abs(millis()-tempo))>1000){
-    /*
-    Serial.print(analogRead(pin_photoA));
-    Serial.print("-");
-    Serial.print(analogRead(pin_photoB));
-    Serial.print("-");
-    Serial.print(analogRead(pin_photoC));
-    Serial.print("-");
-    Serial.print(analogRead(pin_photoD));
-    Serial.println();
-    */
     tempo=millis();
     secondi+=1;
     if (secondi > 59){
       secondi=0;
       minuti+=1;
       if (minuti>1440){
+	//--------------------------------
+	// ogni 24 h azzera i dati
+	// ma prima li salva su EEPROM
+	//--------------------------------
+	eepADDR=EEPROM.read(eepromLASTADDRESSused);
+	if (eepADDR>240){
+	  // memorizza i dati di 240 giorni
+	  eepADDR=0;
+	}
+	eepADDR++;
+	EEPROM.write(eepADDR,MinPhotoA);
+	eepADDR++;
+	EEPROM.write(eepADDR,MinPhotoB);
+	eepADDR++;
+	EEPROM.write(eepADDR,MinPhotoC);	
+	eepADDR++;
+	EEPROM.write(eepADDR,MinPhotoD);
+	// ultimo indirizzo usato
+	EEPROM.write(eepromLASTADDRESSused,eepADDR);
+	// cancellazione
 	minuti=0;
-	MinPhotoA=0;
-	MinPhotoB=0;
-	MinPhotoC=0;
-	MinPhotoD=0;
+	MinPhotoA=0; // fiamma
+	MinPhotoB=0; // termo
+	MinPhotoC=0; // acqua
+	MinPhotoD=0; // interruttore
       }
     }
     if (analogRead(pin_photoA)<SOGLIA){
@@ -172,7 +206,6 @@ void loop(){
       tx();      
       break;
     case MASTCc:
-      byte n=0;
       // imposta l'indirizzo
       INTERIlocali[MESSnum]=CALDAc;
       // valori in memoria
@@ -191,28 +224,30 @@ void loop(){
       if (analogRead(pin_photoA)<SOGLIA){
         n=n | 1;
       }
-      /*
-      Serial.print(analogRead(pin_photoD));
-      Serial.print("-");
-      Serial.print(analogRead(pin_photoC));
-      Serial.print("-");
-      Serial.print(analogRead(pin_photoB));
-      Serial.print("-");
-      Serial.print(analogRead(pin_photoA));
-      Serial.println();
-            Serial.println(n);
-            */
-      //byte m=0;    
-//      Serial.print(n);Serial.print("-");Serial.print(m);
-      //Serial.println();        
       INTERIlocali[DATOa]=n;
-      //Serial.println(INTERIlocali[DATOa]);
       INTERIlocali[DATOb]=0;
       INTERIlocali[DATOc]=0;
       //
       tx();         
-      break;     
+      break;
+    case MASTCd:
+      eepADDR=EEPROM.read(eepromLASTADDRESSused);
+      // imposta l'indirizzo
+      INTERIlocali[MESSnum]=CALDAd;
+      // valori in memoria
+      INTERIlocali[DATOa]=EEPROM.read(eepADDR-3); // fiamma
+      INTERIlocali[DATOb]=EEPROM.read(eepADDR-2); // termo
+      INTERIlocali[DATOc]=EEPROM.read(eepADDR-1); // acqua
+      //
+      tx();      
+      break;      
+    case MASTCz:
+      EEPROM.write(eepromLASTADDRESSused,0);
+      INTERIlocali[MESSnum]=CALDAz;
+      tx();         
+      break;
     }
+    vw_rx_stop();
   }  
 }
 /*--------------------------------
