@@ -52,8 +52,8 @@
 #define CALDAa   1010 // get tempo led A/B/C
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
-#define CALDAd   1013 // get tempo led ABC ieri
-#define CALDAz   1020 // ok: set giorno 0
+#define CALDAd   1020 // get tempo led ABC ieri
+#define CALDAz   1021 // ok: set giorno 0
 /*--------------------------------
 ** radio tx rx
 */
