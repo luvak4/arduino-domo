@@ -19,7 +19,7 @@
 // 3=acqua, 4=interruttore);
 // all'inizio del terzo giorno contiene 8
 // (5=fiamma, 6=termo, 7=acqua, 8=interruttore)
-// e cos� via.
+// e cosï¿½ via.
 // i dati del giorno 'n' si recuperano agli
 // indirizzi:
 // n*4-3 = fiamma
@@ -44,7 +44,7 @@
 #define MASTCa 150 // leggi tempo led A/B/C
 #define MASTCb 151 // leggi tempo led D
 #define MASTCc 152 // get stato leds
-#define MASTCd 153 // tempo led ABC ieri
+#define MASTCd 153 // tempo led ABC ieri, l'atroieri etc
 #define MASTCz 190 // set giorno 0
 /*--------------------------------
 ** risposte (OUT)
@@ -52,7 +52,7 @@
 #define CALDAa   1010 // get tempo led A/B/C
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
-#define CALDAd   1020 // get tempo led ABC ieri
+#define CALDAd   1020 // get tempo led ABC ieri=1 l'altroieri=2 etc.
 #define CALDAz   1021 // ok: set giorno 0
 /*--------------------------------
 ** radio tx rx
@@ -231,13 +231,18 @@ void loop(){
       tx();         
       break;
     case MASTCd:
+      //
+      // 0 123 456 789 012 
+      //   gg0 gg1 gg2 ieri (gg3)
       eepADDR=EEPROM.read(eepromLASTADDRESSused);
+      eepADDR-=1;
+      eepADDR-=INTERIlocali[DATOa]*3;      
       // imposta l'indirizzo
       INTERIlocali[MESSnum]=CALDAd;
       // valori in memoria
-      INTERIlocali[DATOa]=EEPROM.read(eepADDR-3); // fiamma
-      INTERIlocali[DATOb]=EEPROM.read(eepADDR-2); // termo
-      INTERIlocali[DATOc]=EEPROM.read(eepADDR-1); // acqua
+      INTERIlocali[DATOa]=EEPROM.read(eepADDR-2); // fiamma
+      INTERIlocali[DATOb]=EEPROM.read(eepADDR-1); // termo
+      INTERIlocali[DATOc]=EEPROM.read(eepADDR); // acqua
       //
       tx();      
       break;      
