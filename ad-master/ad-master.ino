@@ -1,5 +1,6 @@
 // -*-c++-*-
-// non funziona la ripetizione automatica del comando
+// inserire trattino nella composizione del numero di comando
+// *non funziona la ripetizione automatica del comando
 // *verificare che agc delay serva oppure no
 // *quando non si ottiene risposta entro determinato tempo
 // *segnalare inviando byte conformato in un certo modo
@@ -22,7 +23,7 @@
 // radio rx --->| 11     12 |---> radio tx
 //              |           |
 //              +-----------+
-//               ARDUINO
+//               ARDUINO UNO
 //               ATMEGA 328
 //
 /*--------------------------------
@@ -196,12 +197,15 @@ String  CARATTERI;
 #define KEY_UP    2113210209
 #define KEY_DN     712987970
 #define KEY_OK   -1812574087
+#define KEY_TRATTO -99999999
 #define KEY_CLEAR -477592334
 //
 IRrecv irrecv(pin_ir); // ir initialize library
 decode_results irX;    // ir variable
 //
 int NUMcomp=0;  // numero che viene composto con IR
+int NUMtrattino=0; // numero che viene composto con IR dopo trattino
+bool BOOcomposizNumeroTratto=false; // attivata la composizione del numero col trattino
 /*--------------------------------
 ** EEPROM
 */
@@ -250,6 +254,9 @@ void loop(){
     //END   ogni decimo
     if (decimi>9){
       //BEGIN ogni secondo
+      //
+      // ad ogni secondo nel minuto può essere associato un comando
+      // (60 comandi max)
       switch(secondi){
       case secAA:
 	if (autoMASTRa){INTERIlocali[MESSnum]=MASTRa;  tx();}	break;
@@ -329,7 +336,7 @@ void chechForIR(){
       case MASTRdon:DISPLAYenable=true;EEPROM.write(eepDISPLAY,DISPLAYenable);break;
       case MASTRdof:DISPLAYenable=false;EEPROM.write(eepDISPLAY,DISPLAYenable);break;
 	// comandi radio
-      default:	stampaNc();INTERIlocali[MESSnum]=NUMcomp;tx();break;
+      default:	stampaNc();INTERIlocali[MESSnum]=NUMcomp;INTERIlocali[DATOa]=NUMtrattino;tx();break;
       }
       break;
     case KEY_1: scorriNumero(1);break;
@@ -342,15 +349,38 @@ void chechForIR(){
     case KEY_8: scorriNumero(8);break;
     case KEY_9: scorriNumero(9);break;
     case KEY_0: scorriNumero(0);break;
-    case KEY_CLEAR: NUMcomp=0; stampaNc(); break;
-    case KEY_UP:NUMcomp++; stampaNc(); break;
-    case KEY_DN:NUMcomp--; stampaNc(); break;      
+    case KEY_CLEAR: NUMcomp=0; BOOcomposizNumeroTratto=false; NUMtrattino=0; stampaNc(); break;
+    case KEY_UP:Increementa(); break;
+    case KEY_DN:Decrementa(); break;
+    case KEY_TRATTO: BOOcomposizNumeroTratto=true; stampaNc(true); break;
     }
     ////////end switch////////////////    
     delay(100);
     irrecv.resume();
   }
   /////end check for IR///////////
+}
+/*--------------------------------
+ * incrementa il numero
+ */
+void Incrementa(){
+    if (!BOOcomposizNumeroTratto){
+      NUMcomp++;
+    } else {
+      NUMtrattino++;
+    }
+    stampaNc();
+}
+/*--------------------------------
+ * decrementa il numero
+ */
+void Decrementa(){
+    if (!BOOcomposizNumeroTratto){
+      NUMcomp--;
+    } else {
+      NUMtrattino--;
+    }
+    stampaNc();
 }
 //
 /*--------------------------------
@@ -408,11 +438,24 @@ void txDISPLAY(byte colonna, byte riga){
 // ricevuto via IR
 //
 void stampaNc(){
-  char buf[5];
-  CARATTERI="     ";
-  if (NUMcomp!=0){
-    sprintf(buf, "%5d",NUMcomp);
-    CARATTERI=buf;
+  char buf[8];
+  CARATTERI="        ";
+  if (!BOOcomposizNumeroTratto){
+    // numero prima del trattino
+    if (NUMcomp!=0){
+      sprintf(buf, "%5d",NUMcomp);
+      CARATTERI=buf;
+    }
+  } else {
+    // numero dopo il trattino
+    if (NUMtrattino!=0){
+      sprintf(buf, "%5d",NUMcomp);
+      CARATTERI=buf + "-" + String(NUMtrattino);
+    } else {
+      //
+      sprintf(buf, "%5d",NUMcomp);
+      CARATTERI=buf + "-";	
+    }
   }
   txDISPLAY(10,0);//---->
 }
@@ -423,10 +466,16 @@ void stampaNc(){
 // via IR
 //
 void scorriNumero(byte aggiungi){
-  NUMcomp=NUMcomp*10+aggiungi;
-  if (NUMcomp<0){
-    NUMcomp=0;
-  }  
+  if (!BOOcomposizNumeroTratto){
+    // composizione numero
+    NUMcomp=NUMcomp*10+aggiungi;
+    if (NUMcomp<0){
+      NUMcomp=0;
+    }
+  } else {
+    // composizione numero trattino
+    NUMtrattino=NUMtrattino*10+aggiungi;    
+  }
   stampaNc();
 }
 /*--------------------------------
