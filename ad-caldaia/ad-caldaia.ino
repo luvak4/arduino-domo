@@ -45,6 +45,7 @@
 #define MASTCb 151 // leggi tempo led D
 #define MASTCc 152 // get stato leds
 #define MASTCd 153 // tempo led ABC ieri, l'atroieri etc
+#define MASTCe 154 // numero di giorni memorizzati
 #define MASTCz 190 // set giorno 0
 /*--------------------------------
 ** risposte (OUT)
@@ -53,7 +54,8 @@
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
 #define CALDAd   1020 // get tempo led ABC ieri=1 l'altroieri=2 etc.
-#define CALDAz   1021 // ok: set giorno 0
+#define CALCAe   1021 // giorni memorizzati
+#define CALDAz   1022 // ok: set giorno 0
 /*--------------------------------
 ** radio tx rx
 */
@@ -128,6 +130,7 @@ void loop(){
 	eepADDR=EEPROM.read(eepromLASTADDRESSused);
 	if (eepADDR>240){
 	  // memorizza i dati di 240 giorni
+	  // dopo ricomincia da zero
 	  eepADDR=0;
 	}
 	eepADDR++;
@@ -244,6 +247,18 @@ void loop(){
       INTERIlocali[DATOb]=EEPROM.read(eepADDR-1); // termo
       INTERIlocali[DATOc]=EEPROM.read(eepADDR); // acqua
       //
+      tx();      
+      break;
+    case MASTCe:
+      eepADDR=EEPROM.read(eepromLASTADDRESSused);
+      INTERIlocali[MESSnum]=CALDAe;                  
+      if (eepADDR>0){
+	eepADDR-=1;
+	eepADDR=eepADDR/3;
+	INTERIlocali[DATOa]=eepADDR; 	
+      } else {
+	INTERIlocali[DATOa]=0; 		
+      }
       tx();      
       break;      
     case MASTCz:
