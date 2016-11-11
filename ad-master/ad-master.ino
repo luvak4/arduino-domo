@@ -91,14 +91,21 @@ const int pin_ir  =  2; // ir pin
 #define MASTCb 151     // leggi tempo led D            (CALDAb)
 #define MASTCc 152     // get stato leds               (CALDAc)
 #define MASTCd 153     // tempo led ABC ieri
+#define MASTCe 154 // numero di giorni memorizzati  
 #define MASTCz 190     // set giorno 0
-// pfsense
+// server (pfsense/UPS/NAS/generale)
 #define MASTSa 200     // move servoA (push button)    (SERVOa)
 #define MASTSb 201     // move servoB (push button)    (SERVOb)
-#define MASTSc 202     // get stato leds servoA and B  (SERVOc)
-#define MASTPa 250     // get stato leds pfSense       (PFSENa)
-#define MASTPb 251     // shutdown pfSense             (PFSENb)
-#define MASTPc 252     // reboot pfSense               (PFSENc)
+#define MASTSc 202     // get stato leds servo/pfsense (SERVOc)
+#define MASTSd 203     // get stato generale           (SERVOd)
+#define MASTSe 204     // turn off UPS                 (SERVOe)
+#define MASTSf 205     // turn off NAS                 (SERVOf)
+#define MASTSg 206     // turn off generale            (SERVOg)
+#define MASTSh 207     // turn on UPS                  (SERVOh)
+#define MASTSi 208     // turn on NAS                  (SERVOi)
+#define MASTSj 209     // turn on generale             (SERVOj)
+#define MASTSk 210     // shutdown pfSense             (SERVOk)
+#define MASTSl 211     // reboot pfSense               (SERVOl)
 /*--------------------------------
 ** risposte (IN)
 */
@@ -115,16 +122,21 @@ const int pin_ir  =  2; // ir pin
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
 #define CALDAd   1020 // get tempo led ABC ieri
-#define CALDAz   1021 // ok: set giorno 0
-// servo
-#define SERVOa   1013 // ok pushbutton A
-#define SERVOb   1014 // ok pushbutton B
-#define SERVOc   1015 // get stato leds servoA and servoB
-// pfsense
-#define PFSENa   1016 // get status of leds
-#define PFSENb   1017 // ok shutdown
-#define PFSENc   1018 // ok reboot
-#define PFSENc   1019 // operation not possible
+#define CALCAe   1021 // giorni memorizzati
+#define CALDAz   1022 // ok: set giorno 0
+// server (pfsense/UPS/NAS/generale)
+#define SERVOa 1030   // move servoA (push button)
+#define SERVOb 1031   // move servoB (push button)
+#define SERVOc 1032   // get stato leds servo/pfsense
+#define SERVOd 1033   // get stato generale
+#define SERVOe 1034   // turn off UPS      
+#define SERVOf 1035   // turn off NAS      
+#define SERVOg 1036   // turn off generale 
+#define SERVOh 1037   // turn on UPS       
+#define SERVOi 1038   // turn on NAS       
+#define SERVOj 1039   // turn on generale  
+#define SERVOk 1040   // shutdown pfSense  
+#define SERVOl 1041   // reboot pfSense    
 /*--------------------------------
 ** radio tx rx
 */
@@ -749,6 +761,16 @@ void controllaRisposta(int& numMsg){
       txDISPLAY(0,3);	    	        	    	          
     }
   }
+  //--------------------------------
+  if (numMsg==MASTCe){
+    if (INTERIlocali[MESSnum]==CALDAe){
+      clearDISPLAY();
+      CARATTERI = "CALDAIA (" + String(INTERIlocali[MESSnum]) + ")";
+      txDISPLAY(0,0);
+      CARATTERI="gg memorizz: "+String(INTERIlocali[DATOa]);
+      txDISPLAY(0,1);
+    }
+  }  
   //--------------------------------
   if (numMsg==MASTCz){
     if (INTERIlocali[MESSnum]==CALDAz){
