@@ -1,5 +1,7 @@
 // -*-c++-*-
 ////////////////////////////////
+// ***** IN DISMISSIONE *****
+// INTEGRATO IN SERVOPULSANTE
 // pf-Sense spegnitore
 ////////////////////////////////
 
