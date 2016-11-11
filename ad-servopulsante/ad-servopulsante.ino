@@ -1,6 +1,6 @@
 // -*-c++-*-
 ////////////////////////////////
-// SERVO PULSANTE
+// SERVO PULSANTE (nuova versione)
 ////////////////////////////////
 
 // E' una interfaccia che spegne e accende dispositivi
@@ -17,10 +17,11 @@
               |            |<------- Sensore luce A
               |            |<------- Sensore luce B
               |            |
-              |            |-------> rele A
-              |            |-------> rele B
+              |            |-------> rele generale
+              |            |-------> rele bridge A
+              |            |-------> rele modem
               |            |
-spegni pfs--->|            |-------> com RS232 (pfsense)
+              |            |-------> com RS232 (pfsense)
               |            |
 radio rx ---->|            |-------> radio tx
               +------------+
@@ -34,10 +35,13 @@ radio rx ---->|            |-------> radio tx
 /*--------------------------------
 ** pins
 */
-#define pin_luceA      2
-#define pin_luceB      3
-#define pin_servoA 4
-#define pin_servoB 5
+#define pin_luceA       2
+#define pin_luceB       3
+#define pin_servoA      4
+#define pin_servoB      5
+#define pin_releGen     6
+#define pin_releBridgeA 7
+#define pin_releModem   8
 #define pin_rx    11
 #define pin_tx    12
 /*--------------------------------
@@ -45,13 +49,31 @@ radio rx ---->|            |-------> radio tx
 */
 #define MASTSa 200     // move servoA (push button)    (SERVOa)
 #define MASTSb 201     // move servoB (push button)    (SERVOb)
-#define MASTSc 202     // get stato leds servoA and B  (SERVOc)
+#define MASTSc 202     // get stato leds servo/pfsense (SERVOc)
+#define MASTSd 203     // get stato generale           (SERVOd)
+#define MASTSe 204     // turn off UPS                 (SERVOe)
+#define MASTSf 205     // turn off NAS                 (SERVOf)
+#define MASTSg 206     // turn off generale            (SERVOg)
+#define MASTSh 207     // turn on UPS                  (SERVOh)
+#define MASTSi 208     // turn on NAS                  (SERVOi)
+#define MASTSj 209     // turn on generale             (SERVOj)
+#define MASTSk 210     // shutdown pfSense             (SERVOk)
+#define MASTSl 211     // reboot pfSense               (SERVOl)
 /*--------------------------------
 ** risposte (OUT)
 */
-#define SERVOa   1013 // ok pushbutton A
-#define SERVOb   1014 // ok pushbutton B
-#define SERVOc   1015 // get stato leds servoA and servoB
+#define SERVOa 1030   // move servoA (push button)
+#define SERVOb 1031   // move servoB (push button)
+#define SERVOc 1032   // get stato leds servo/pfsense
+#define SERVOd 1033   // get stato generale
+#define SERVOe 1034   // turn off UPS      
+#define SERVOf 1035   // turn off NAS      
+#define SERVOg 1036   // turn off generale 
+#define SERVOh 1037   // turn on UPS       
+#define SERVOi 1038   // turn on NAS       
+#define SERVOj 1039   // turn on generale  
+#define SERVOk 1040   // shutdown pfSense  
+#define SERVOl 1041   // reboot pfSense    
 /*--------------------------------
 ** radio tx rx
 */
@@ -73,6 +95,7 @@ uint8_t buflen = BYTEStoTX; //for rx
 /*--------------------------------
 ** varie
 */
+#define ANGOLOservo 1200 // angolo (uS) per premere il pulsante
 ServoTimer2 servoA;
 ServoTimer2 servoB;
 //
@@ -115,12 +138,12 @@ void loop(){
     decodeMessage();
     switch (INTERIlocali[MESSnum]){
     case MASTSa:
-      servoA.write(1200);
+      servoA.write(ANGOLOservo);
       delay(2000);
       servoA.write(0);      
       break;
     case MASTSb:
-      servoB.write(1200);
+      servoB.write(ANGOLOservo);
       delay(2000);
       servoB.write(0);     
       break;
