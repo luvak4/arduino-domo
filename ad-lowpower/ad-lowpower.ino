@@ -23,7 +23,7 @@
 #define pin_tx    12
 
 /*--------------------------------
-** risposte (OUT)
+** innesco (OUT)
 */
 #define POWERa 1100   // send when "N" pulses reaches
 /*--------------------------------
@@ -45,26 +45,32 @@ byte    BYTEradio[BYTEStoTX];  // buffer per la trasmissione
 /*--------------------------------
 ** varie
 */
-#define pulsesToTx 10
+#define pulsesToTx 50
 
-byte contaImpulsiLuce;
+unsigned long contaImpulsiLuce;
+unsigned int diff;
+
 
 void sveglia()
 {
     // Just a handler for the pin interrupt.
   contaImpulsiLuce++;
-  if (contaImpulsiLuce>=pulsesToTx){
-    contaImpulsiLuce=0;
-  // imposta l'indirizzo
-  INTERIlocali[MESSnum]=POWERa;
-  //
+  diff=contaImpulsiLuce-contaImpulsiLucePrec;
+  if (diff>=pulsesToTx){
+    contaImpulsiLucePrec=contaImpulsiLuce;
+    // imposta l'indirizzo
+    INTERIlocali[MESSnum]=POWERa;
+    //
   tx();    
   }
 }
 
 void setup()
 {
-    pinMode(pin_luceA, INPUT);   
+    pinMode(pin_luceA, INPUT);
+  // radio
+  vw_set_tx_pin(pin_tx);
+  vw_setup(VELOCITAstd);   
 }
 
 void loop() 
