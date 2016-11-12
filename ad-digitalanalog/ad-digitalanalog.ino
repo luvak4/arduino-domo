@@ -64,6 +64,10 @@ man.interrA --->| 4         |
 #define agcDEF 1000
 #define agcMAX 1500
 /*--------------------------------
+** inneschi (IN)
+*/
+#define POWERa 1100   //consumo di corrente
+/*--------------------------------
 ** domande (IN)
 */
 #define MASTRa 101 // get luce/temp/rele               (CANTIa)
@@ -169,6 +173,8 @@ bool statoInterruttoreA;
 bool statoInterruttoreB;
 byte antirimbIntA;
 byte antirimbIntB;
+unsigned long timePrecPOWERpulse;
+#define WATToraPerPulse 10;
 //
 /*////////////////////////////////
 * setup()
@@ -266,6 +272,10 @@ void loop(){
       vw_rx_stop();
       decodeMessage();
       switch (INTERIlocali[MESSnum]){
+      case POWERa:
+	// consumo di corrente
+	POWERconsumption++;
+	break;
       case MASTRa:
 	// invio valori RAW di luce e temperatura
 	ROU_CANTIa();
@@ -353,6 +363,10 @@ void loop(){
 	EEPROMsaveRele();
 	ROU_CANTIa();
 	break;
+      case MASTRs:
+	// power consumption
+	ROU_CANTIs();
+	break;	
       case MASTRpp:
 	// rele ON
 	digitalWrite(pin_releB,HIGH);
@@ -375,6 +389,23 @@ void loop(){
       vw_rx_start();
     }
   }
+}
+
+/*--------------------------------
+* ROU_CANTIs()
+*/
+// trasmissione valore consumo corrente
+// in watt/ora
+void ROU_CANTIs(){
+  // imposta l'indirizzo
+  INTERIlocali[MESSnum]=CANTId;
+  // valori in memoria
+  INTERIlocali[DATOa]=BYTEStoINT(tempSTA,luceSTA);
+  // usato un 'int' per memorizzare due byte (temperSTA e luceSTA)
+  INTERIlocali[DATOb]=tempMINUTIstato;
+  INTERIlocali[DATOc]=luceMINUTIstato;
+  //
+  tx();
 }
 
 /*--------------------------------
@@ -684,7 +715,7 @@ void tx(){
 }
 /*--------------------------------
  * restituisce il valore di 
- * temperatura in Â°C (x 10)
+ * temperatura in ÃÂ°C (x 10)
  */
 int centigradi(int& valoreSensore){
   //byte val[107]={75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181};
