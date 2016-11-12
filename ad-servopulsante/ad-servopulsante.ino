@@ -108,8 +108,8 @@ bool servoBon=false;
 * setup()
 */
 void setup() {
-  pinMode(pin_luceA,OUTPUT);
-  pinMode(pin_luceB,OUTPUT);
+  pinMode(pin_luceA,INPUT);
+  pinMode(pin_luceB,INPUT);
   servoA.attach(pin_servoA);
   servoB.attach(pin_servoB);
   Serial.begin(9600); // debug
