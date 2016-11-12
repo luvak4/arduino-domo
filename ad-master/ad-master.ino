@@ -267,7 +267,7 @@ void loop(){
     if (decimi>9){
       //BEGIN ogni secondo
       //
-      // ad ogni secondo nel minuto può essere associato un comando
+      // ad ogni secondo nel minuto puÃ² essere associato un comando
       // (60 comandi max)
       switch(secondi){
       case secAA:
