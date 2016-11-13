@@ -54,7 +54,7 @@
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
 #define CALDAd   1020 // get tempo led ABC ieri=1 l'altroieri=2 etc.
-#define CALCAe   1021 // giorni memorizzati
+#define CALDAe   1021 // giorni memorizzati
 #define CALDAz   1022 // ok: set giorno 0
 /*--------------------------------
 ** radio tx rx
@@ -267,7 +267,7 @@ void loop(){
       tx();         
       break;
     }
-    vw_rx_stop();
+    vw_rx_start();
   }  
 }
 /*--------------------------------
