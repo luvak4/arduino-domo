@@ -91,6 +91,7 @@ man.interrA --->| 4         |
 #define MASTRpp 119 // rele B ON                       (CANTIa)
 #define MASTRqq 120 // rele B OFF                      (CANTIa)
 #define MASTRrr 121 // rele B toggle                   (CANTIa)
+#define MASTRs 131 // power consumption                (CANTIs)
 /*--------------------------------
 ** risposte (OUT)
 */
@@ -101,6 +102,7 @@ man.interrA --->| 4         |
 #define CANTIokA 1004 // get ok salva eprom
 #define CANTIokB 1005 // get ok carica eprom
 #define CANTIokC 1006 // get ok carica default
+#define CANTIs   1007 // power consumption
 /*--------------------------------
 ** radio tx rx
 */
@@ -173,7 +175,7 @@ bool statoInterruttoreA;
 bool statoInterruttoreB;
 byte antirimbIntA;
 byte antirimbIntB;
-unsigned long timePrecPOWERpulse;
+unsigned long POWERconsumption;
 #define WATToraPerPulse 10;
 //
 /*////////////////////////////////
