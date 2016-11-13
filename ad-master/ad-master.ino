@@ -78,6 +78,7 @@ const int pin_ir  =  2; // ir pin
 #define MASTRpp 119 // rele B ON                       (CANTIa)
 #define MASTRqq 120 // rele B OFF                      (CANTIa)
 #define MASTRrr 121 // rele B toggle                   (CANTIa)
+#define MASTRs 131 // power consumption                (CANTIs)
 // interno
 #define MASTRaa 122    // ogni minuto MASTRa
 #define MASTRab 123    // disable ogni minuto MASTRa
@@ -117,12 +118,13 @@ const int pin_ir  =  2; // ir pin
 #define CANTIokA 1004 // get ok salva eprom
 #define CANTIokB 1005 // get ok carica eprom
 #define CANTIokC 1006 // get ok carica default
+#define CANTIs   1007 // power consumption
 // caldaia
 #define CALDAa   1010 // get tempo led A/B/C
 #define CALDAb   1011 // get tempo led D
 #define CALDAc   1012 // get stato leds
 #define CALDAd   1020 // get tempo led ABC ieri
-#define CALCAe   1021 // giorni memorizzati
+#define CALDAe   1021 // giorni memorizzati
 #define CALDAz   1022 // ok: set giorno 0
 // server (pfsense/UPS/NAS/generale)
 #define SERVOa 1030   // move servoA (push button)
@@ -209,7 +211,7 @@ String  CARATTERI;
 #define KEY_UP    2113210209
 #define KEY_DN     712987970
 #define KEY_OK   -1812574087
-#define KEY_TRATTO -99999999
+#define KEY_TRATTO 827373802
 #define KEY_CLEAR -477592334
 //
 IRrecv irrecv(pin_ir); // ir initialize library
@@ -251,7 +253,7 @@ void setup()
   DISPLAYenable=true;//EEPROM.read(eepDISPLAY);
   autoMASTRa=false;//EEPROM.read(eepMASTRa);
   autoMASTRo=false;//EEPROM.read(eepMASTRo);
-  //Serial.begin(9600);
+  Serial.begin(9600);
 }
 //
 /*--------------------------------
@@ -362,9 +364,9 @@ void chechForIR(){
     case KEY_9: scorriNumero(9);break;
     case KEY_0: scorriNumero(0);break;
     case KEY_CLEAR: NUMcomp=0; BOOcomposizNumeroTratto=false; NUMtrattino=0; stampaNc(); break;
-    case KEY_UP:Increementa(); break;
+    case KEY_UP:Incrementa(); break;
     case KEY_DN:Decrementa(); break;
-    case KEY_TRATTO: BOOcomposizNumeroTratto=true; stampaNc(true); break;
+    case KEY_TRATTO: BOOcomposizNumeroTratto=true; stampaNc(); break;
     }
     ////////end switch////////////////    
     delay(100);
@@ -404,6 +406,8 @@ void Decrementa(){
 //
 void txDISPLAY(byte colonna, byte riga){
   // pulisce bytes-radio
+
+  Serial.println(CARATTERI);
   for (byte n=0;n<20;n++){
     BYTEradioindirDISPLAY[n]=0;
   }
@@ -455,18 +459,19 @@ void stampaNc(){
   if (!BOOcomposizNumeroTratto){
     // numero prima del trattino
     if (NUMcomp!=0){
-      sprintf(buf, "%5d",NUMcomp);
-      CARATTERI=buf;
+      //sprintf(buf, "%5d",NUMcomp);
+      CARATTERI=String(NUMcomp);
     }
   } else {
     // numero dopo il trattino
     if (NUMtrattino!=0){
-      sprintf(buf, "%5d",NUMcomp);
-      CARATTERI=buf + "-" + String(NUMtrattino);
+      //sprintf(buf, "%5d",NUMcomp);
+      CARATTERI=String(NUMcomp);
+      CARATTERI+= "-" + String(NUMtrattino);
     } else {
       //
-      sprintf(buf, "%5d",NUMcomp);
-      CARATTERI=buf + "-";	
+      //sprintf(buf, "%5d",NUMcomp);
+      CARATTERI=String(NUMcomp) + "-";	
     }
   }
   txDISPLAY(10,0);//---->
@@ -751,7 +756,7 @@ void controllaRisposta(int& numMsg){
   if (numMsg==MASTCd){
     if (INTERIlocali[MESSnum]==CALDAd){
       clearDISPLAY();
-      CARATTERI = "CALDAIA IERI (" + String(INTERIlocali[MESSnum]) + ")";
+      CARATTERI = "CALDAIA gior (" + String(INTERIlocali[MESSnum]) + ")";
       txDISPLAY(0,0);
       CARATTERI="minuti FIAMMA: "+String(INTERIlocali[DATOa]);
       txDISPLAY(0,1);
